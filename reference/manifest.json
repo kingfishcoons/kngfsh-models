@@ -130,8 +130,8 @@
       "license": "CC-BY-4.0"
     },
     {
-      "id": "es-1780",
-      "file": "audio/es-1780.wav",
+      "id": "es-1780-b",
+      "file": "audio/es-1780-b.wav",
       "language": "es",
       "fleurs_config": "es_419",
       "fleurs_id": "1780",
@@ -658,8 +658,8 @@
       "license": "CC-BY-4.0"
     },
     {
-      "id": "ca-1992",
-      "file": "audio/ca-1992.wav",
+      "id": "ca-1992-b",
+      "file": "audio/ca-1992-b.wav",
       "language": "ca",
       "fleurs_config": "ca_es",
       "fleurs_id": "1992",

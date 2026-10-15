@@ -6,6 +6,11 @@ name: reference
 
 on:
   workflow_dispatch:
+  # workflow_dispatch only lists workflows on the default branch, which this repo does not use for the pack yet,
+  # so a push to the working branch also runs the build. The paths keep the bot's output commit from re-running it.
+  push:
+    branches: ['claude/peaceful-pascal-r58gzh']
+    paths: ['reference/build_pack.py', '.github/workflows/reference.yml']
 
 permissions:
   contents: write

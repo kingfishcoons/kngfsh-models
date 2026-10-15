@@ -1,0 +1,10 @@
+name: probe
+on:
+  push:
+    branches: ['claude/peaceful-pascal-r58gzh']
+    paths: ['.github/workflows/probe.yml']
+jobs:
+  hello:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo probe ok

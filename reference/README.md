@@ -6,10 +6,12 @@ Clips for comparing speech recognizers on Castellano and Valencian, used by the 
 
 | Path | What it is |
 |---|---|
-| `audio/es-<id>.wav`, `audio/ca-<id>.wav` | 30 utterances per language, 4 to 15 s, 16 kHz mono PCM16 WAV |
+| `audio/es-<id>.wav`, `audio/ca-<id>.wav` | 30 utterances per language, 4 to 15 s, 16 kHz mono PCM16 WAV; `<id>` is the FLEURS id (see below) |
 | `manifest.json` | Each clip's id, file, language, duration, raw and normalized transcript, and licence; the build's source revision |
 | `transcripts-es.tsv`, `transcripts-ca.tsv` | File, duration and raw transcript, one line per clip |
 | `script/es-castellano.txt`, `script/ca-valencia.txt` | A school-themed script of about 2 to 3 minutes, to be read aloud and recorded on the phones |
+
+**Clip ids.** FLEURS gives the same id to every recording of a sentence, and a sentence can be read by more than one speaker. The first recording keeps the plain id (`es-1780`); later ones get a letter (`es-1780-b`, `-c`, ...). `build_pack.py` stops with an error if two clips would share an id or a file, if `audio/` and the manifest list different files, or if a file does not match its manifest row (format and length).
 
 The audio and transcripts are written by `build_pack.py`, run by `.github/workflows/reference.yml` (manual `workflow_dispatch`, on the branch that holds the workflow). Rebuilding at the same dataset revision picks the same clips.
 

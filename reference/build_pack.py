@@ -2,11 +2,13 @@
 """Builds the reference clip pack from the FLEURS test split (google/fleurs, CC-BY-4.0).
 
 Run by .github/workflows/reference.yml. Writes, under --out:
-  audio/<lang>-<fleurs id>.wav   16 kHz mono PCM16, one utterance each
+  audio/<lang>-<fleurs id>.wav   16 kHz mono PCM16, one utterance each; a second or third recording of the same
+                                 FLEURS id (the same sentence read by another speaker) is <lang>-<fleurs id>-b.wav, -c, ...
   manifest.json                  the clips, their transcripts and attribution
   transcripts-<lang>.tsv         file, duration and the raw transcript, one line per clip
 
 Selection is seeded, so a rebuild at the same revision picks the same clips. Transcripts are copied unchanged.
+The build fails if two clips share an id or a file, or if a file does not match its manifest row.
 """
 import argparse
 import csv
@@ -56,6 +58,45 @@ def read_transcripts(path: str) -> dict:
     return rows
 
 
+def clip_ids(lang: str, fleurs_ids: list) -> list:
+    """One id per chosen utterance, in order: <lang>-<fleurs id>.
+
+    FLEURS gives the same id to every recording of a sentence, and a sentence can be read by more than one speaker.
+    The first recording keeps the plain id; later ones get a letter, -b, -c, ..., so no clip overwrites another.
+    """
+    seen = {}
+    ids = []
+    for fleurs_id in fleurs_ids:
+        n = seen.get(fleurs_id, 0)
+        seen[fleurs_id] = n + 1
+        if n > 25:
+            raise SystemExit(f"{lang}-{fleurs_id}: more than 26 recordings of one FLEURS id")
+        ids.append(f"{lang}-{fleurs_id}" + ("" if n == 0 else "-" + chr(ord("a") + n)))
+    return ids
+
+
+def verify(out: Path, clips: list) -> None:
+    """Fails the build if two clips share an id or a file, if audio/ and the manifest disagree on which files
+    exist, or if a file's format or length does not match its manifest row."""
+    ids = [c["id"] for c in clips]
+    files = [c["file"] for c in clips]
+    if len(set(ids)) != len(ids):
+        raise SystemExit("two clips share an id: " + ", ".join(sorted({i for i in ids if ids.count(i) > 1})))
+    if len(set(files)) != len(files):
+        raise SystemExit("two clips share a file: " + ", ".join(sorted({f for f in files if files.count(f) > 1})))
+    on_disk = {p.name for p in (out / "audio").glob("*.wav")}
+    listed = {Path(f).name for f in files}
+    if on_disk != listed:
+        raise SystemExit(f"audio/ and the manifest disagree: only on disk {sorted(on_disk - listed)}, only in the manifest {sorted(listed - on_disk)}")
+    for c in clips:
+        info = sf.info(out / c["file"])
+        ms = round(info.frames * 1000 / info.samplerate)
+        if info.samplerate != RATE or info.channels != 1 or info.subtype != "PCM_16":
+            raise SystemExit(f"{c['file']}: expected 16 kHz mono PCM16, found {info.samplerate} Hz, {info.channels} ch, {info.subtype}")
+        if abs(ms - c["duration_ms"]) > 1:
+            raise SystemExit(f"{c['file']}: the manifest says {c['duration_ms']} ms, the file holds {ms} ms")
+
+
 def build_language(config: str, lang: str, out: Path) -> list:
     tsv = hf_hub_download(REPO, f"data/{config}/test.tsv", repo_type="dataset", revision=REVISION)
     tar_path = hf_hub_download(REPO, f"data/{config}/audio/test.tar.gz", repo_type="dataset", revision=REVISION)
@@ -87,10 +128,9 @@ def build_language(config: str, lang: str, out: Path) -> list:
                     key=lambda n: int(transcripts[n]["fleurs_id"]))
 
     clips = []
-    for name in chosen:
+    for name, clip_id in zip(chosen, clip_ids(lang, [transcripts[n]["fleurs_id"] for n in chosen])):
         info = transcripts[name]
         samples = eligible[name]
-        clip_id = f"{lang}-{info['fleurs_id']}"
         rel = f"audio/{clip_id}.wav"
         sf.write(out / rel, samples, RATE, subtype="PCM_16")
         clips.append({
@@ -124,6 +164,9 @@ def main() -> None:
             for c in clips:
                 w.writerow([c["file"], c["duration_ms"], c["transcript"]])
         print(f"{lang}: wrote {len(clips)} clips, {sum(c['duration_ms'] for c in clips) / 60000:.1f} min")
+
+    verify(out, all_clips)
+    print(f"verified: {len(all_clips)} clips, every id and file distinct, every file matches its manifest row")
 
     manifest = {
         "pack": "kngfsh reference clips",

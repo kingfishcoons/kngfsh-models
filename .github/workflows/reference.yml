@@ -1,0 +1,55 @@
+name: reference
+
+# Builds the FLEURS reference clip pack (reference/) on a GitHub runner. The app's cloud sessions cannot reach
+# Hugging Face's file host, but Actions runners can, and this repository is public, so its minutes are free.
+# Run it by hand (workflow_dispatch) from the branch that holds this file; it commits the output to that branch.
+
+on:
+  workflow_dispatch:
+  # workflow_dispatch only lists workflows on the default branch, which this repo does not use for the pack yet,
+  # so a push to the working branch also runs the build. The paths keep the bot's output commit from re-running it.
+  push:
+    branches: ['claude/peaceful-pascal-r58gzh']
+    paths: ['reference/build_pack.py', '.github/workflows/reference.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  pack:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: pip install huggingface_hub==0.36.0 soundfile==0.13.1 scipy==1.15.3 numpy==2.3.3
+
+      - name: Build the FLEURS reference clips
+        run: python3 reference/build_pack.py --out reference
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reference-pack
+          path: reference
+          retention-days: 7
+
+      - name: Commit the pack to this branch
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reference
+          if git diff --cached --quiet; then
+            echo "The pack is unchanged."
+            exit 0
+          fi
+          git commit \
+            -m "Reference pack: FLEURS es_419 and ca_es clips (built by reference.yml)" \
+            -m "Co-Authored-By: Claude <noreply@anthropic.com>" \
+            -m "Claude-Session: https://claude.ai/code/session_01WuDwCs4xWmcawmwMbjdFrP"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

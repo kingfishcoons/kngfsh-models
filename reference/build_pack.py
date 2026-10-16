@@ -4,11 +4,15 @@
 Run by .github/workflows/reference.yml. Writes, under --out:
   audio/<lang>-<fleurs id>.wav   16 kHz mono PCM16, one utterance each; a second or third recording of the same
                                  FLEURS id (the same sentence read by another speaker) is <lang>-<fleurs id>-b.wav, -c, ...
-  manifest.json                  the clips, their transcripts and attribution
-  transcripts-<lang>.tsv         file, duration and the raw transcript, one line per clip
+  manifest.json                  the clips, their transcripts, English references and attribution
+  transcripts-<lang>.tsv         file, duration, the raw transcript and the English reference, one line per clip
+
+The English reference is the FLEURS en_us transcription of the same id (the same sentence, read in English). Where
+an id has no English in any en_us split, the English fields are null and the build lists the ids; it does not fail.
 
 Selection is seeded, so a rebuild at the same revision picks the same clips. Transcripts are copied unchanged.
-The build fails if two clips share an id or a file, or if a file does not match its manifest row.
+The build fails if two clips share an id or a file, if an id has two different English texts, or if a file or an
+English field does not match its manifest row.
 """
 import argparse
 import csv
@@ -31,6 +35,9 @@ REVISION = "70bb2e84b976b7e960aa89f1c648e09c59f894dd"
 # (FLEURS config, app language code). FLEURS has no Castellano config: es_419 is Latin American Spanish.
 # ca_es is Catalan as spoken in Catalonia, not a Valencian-specific set.
 CONFIGS = [("es_419", "es"), ("ca_es", "ca")]
+# The English reference for each id. Looked up in these splits, in this order (test first, the clip's own split).
+ENGLISH_CONFIG = "en_us"
+ENGLISH_SPLITS = ["test", "dev", "train"]
 RATE = 16_000
 MIN_S, MAX_S = 4.0, 15.0
 PER_LANG = 30
@@ -75,9 +82,49 @@ def clip_ids(lang: str, fleurs_ids: list) -> list:
     return ids
 
 
+def read_english(wanted: set) -> dict:
+    """FLEURS id -> (split, English raw transcription), for the ids in `wanted`, over the en_us splits.
+
+    Stops if one id has two different English texts. An id with no English is left out of the result.
+    """
+    texts = {}
+    for split in ENGLISH_SPLITS:
+        tsv = hf_hub_download(REPO, f"data/{ENGLISH_CONFIG}/{split}.tsv", repo_type="dataset", revision=REVISION)
+        with open(tsv, encoding="utf-8", newline="") as f:
+            for row in csv.reader(f, delimiter="\t"):
+                if len(row) >= 4 and row[0] in wanted:
+                    texts.setdefault(row[0], {}).setdefault(row[2], split)
+    conflicts = {i: list(t) for i, t in texts.items() if len(t) > 1}
+    if conflicts:
+        raise SystemExit("ids with two different English texts: " + "; ".join(f"{i}: {t}" for i, t in sorted(conflicts.items())))
+    found = {}
+    for i, t in texts.items():
+        ((text, split),) = t.items()
+        found[i] = (split, text)
+    print(f"{ENGLISH_CONFIG}: English found for {len(found)} of {len(wanted)} ids")
+    return found
+
+
+def attach_english(clips: list, english: dict) -> list:
+    """Sets english_reference and english_source on each clip (null when there is no English). Returns the ids without."""
+    missing = []
+    for c in clips:
+        hit = english.get(c["fleurs_id"])
+        if hit is None:
+            c["english_reference"] = None
+            c["english_source"] = None
+            missing.append(c["id"])
+        else:
+            split, text = hit
+            c["english_reference"] = text
+            c["english_source"] = f"google/fleurs {ENGLISH_CONFIG}, id {c['fleurs_id']}, {split}"
+    return missing
+
+
 def verify(out: Path, clips: list) -> None:
     """Fails the build if two clips share an id or a file, if audio/ and the manifest disagree on which files
-    exist, or if a file's format or length does not match its manifest row."""
+    exist, if a file's format or length does not match its manifest row, or if an English field is missing or
+    empty (null is allowed: no English for that id)."""
     ids = [c["id"] for c in clips]
     files = [c["file"] for c in clips]
     if len(set(ids)) != len(ids):
@@ -95,6 +142,25 @@ def verify(out: Path, clips: list) -> None:
             raise SystemExit(f"{c['file']}: expected 16 kHz mono PCM16, found {info.samplerate} Hz, {info.channels} ch, {info.subtype}")
         if abs(ms - c["duration_ms"]) > 1:
             raise SystemExit(f"{c['file']}: the manifest says {c['duration_ms']} ms, the file holds {ms} ms")
+        for key in ("english_reference", "english_source"):
+            if key not in c:
+                raise SystemExit(f"{c['id']}: the manifest row has no {key}")
+            if c[key] == "":
+                raise SystemExit(f"{c['id']}: {key} is empty; write null when there is no English")
+        if (c["english_reference"] is None) != (c["english_source"] is None):
+            raise SystemExit(f"{c['id']}: english_reference and english_source must both be null or both set")
+    for lang in sorted({c["language"] for c in clips}):
+        with open(out / f"transcripts-{lang}.tsv", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f, delimiter="\t")
+            if "english" not in (reader.fieldnames or []):
+                raise SystemExit(f"transcripts-{lang}.tsv has no english column")
+            rows = list(reader)
+        expected = [c for c in clips if c["language"] == lang]
+        if len(rows) != len(expected):
+            raise SystemExit(f"transcripts-{lang}.tsv has {len(rows)} rows, the manifest has {len(expected)} clips")
+        for r, c in zip(rows, expected):
+            if r["english"] == "":
+                raise SystemExit(f"transcripts-{lang}.tsv: {c['id']} has an empty english cell; write null when there is no English")
 
 
 def build_language(config: str, lang: str, out: Path) -> list:
@@ -158,19 +224,27 @@ def main() -> None:
     for config, lang in CONFIGS:
         clips = build_language(config, lang, out)
         all_clips.extend(clips)
-        with open(out / f"transcripts-{lang}.tsv", "w", encoding="utf-8", newline="") as f:
-            w = csv.writer(f, delimiter="\t", lineterminator="\n")
-            w.writerow(["file", "duration_ms", "transcript"])
-            for c in clips:
-                w.writerow([c["file"], c["duration_ms"], c["transcript"]])
         print(f"{lang}: wrote {len(clips)} clips, {sum(c['duration_ms'] for c in clips) / 60000:.1f} min")
 
+    missing = attach_english(all_clips, read_english({c["fleurs_id"] for c in all_clips}))
+    if missing:
+        print("no English in any en_us split (english is null): " + ", ".join(missing))
+
+    for _, lang in CONFIGS:
+        clips = [c for c in all_clips if c["language"] == lang]
+        with open(out / f"transcripts-{lang}.tsv", "w", encoding="utf-8", newline="") as f:
+            w = csv.writer(f, delimiter="\t", lineterminator="\n")
+            w.writerow(["file", "duration_ms", "transcript", "english"])
+            for c in clips:
+                w.writerow([c["file"], c["duration_ms"], c["transcript"], "null" if c["english_reference"] is None else c["english_reference"]])
+        print(f"{lang}: English for {sum(c['english_reference'] is not None for c in clips)} of {len(clips)} clips")
+
     verify(out, all_clips)
-    print(f"verified: {len(all_clips)} clips, every id and file distinct, every file matches its manifest row")
+    print(f"verified: {len(all_clips)} clips, every id and file distinct, every file matches its manifest row, every English field set or null")
 
     manifest = {
         "pack": "kngfsh reference clips",
-        "built_from": {"dataset": REPO, "revision": REVISION, "split": "test"},
+        "built_from": {"dataset": REPO, "revision": REVISION, "split": "test", "english_config": ENGLISH_CONFIG},
         "format": "16 kHz, mono, PCM16 WAV",
         "license": LICENSE,
         "clips": all_clips,

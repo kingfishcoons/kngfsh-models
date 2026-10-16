@@ -1,0 +1,78 @@
+eval/results/opus-mt-fp32.csv
+  opus-mt:Helsinki-NLP/opus-mt-es-en@c96e2c5 on GitHub Actions Linux x86_64, 4 CPUs, PyTorch 2.8.0+cpu fp32, eval/translate_opus_mt.py, sentences kngfsh-models@030870d
+
+Castellano to English (es): 29 sentences
+  chrF    55.2   95% interval 51.7 to 58.6   (below the 60 line)
+  chrF++  53.3
+  BLEU    23.9   (BLEU = 23.93 59.2/31.8/17.8/9.7 (BP = 1.000 ratio = 1.073 hyp_len = 764 ref_len = 712))
+  the 8 lowest sentences by chrF:
+    es-1770  chrF 28.0
+      source:     Esto parece tener sentido, ya que en la Tierra no se percibe su movimiento, ¿cierto?
+      reference:  This seems sensible, because the Earth doesn't feel as if it's moving, does it?
+      translated: This seems to make sense, since your movement is not perceived on Earth, right?
+    es-1697  chrF 36.8
+      source:     No ha podido tomarse medicamentos para aliviar el dolor, porque está prohibido su uso en los Juegos.
+      reference:  He has been unable to take the drugs needed to overcome his pain as they are banned from the Games.
+      translated: He has not been able to take pain-relief medicines, because it is forbidden to use them in the Games.
+    es-1867  chrF 38.2
+      source:     Las plantas generan el oxígeno que las personas respiran y absorben el dióxido de carbono que ellas exhalan (que despiden).
+      reference:  Plants make oxygen which humans breathe, and they take in carbon-dioxide which humans exhale (that is, breathe out).
+      translated: Plants generate the oxygen that people breathe and absorb the carbon dioxide they exhale (which they fire).
+    es-1680  chrF 41.6
+      source:     Atleta integral, el tigre tiene la habilidad de trepar (pero no demasiado bien), nadar, dar extensos saltos y jalar cinco veces más fuerte que una persona robusta.
+      reference:  A well rounded athlete, the tiger can climb (though not well), swim, leap great distances and pull with five times the force of a strong human.
+      translated: Athlete integral, the tiger has the ability to climb (but not too well), swim, take extensive jumps and pull five times stronger than a robust person.
+    es-1984  chrF 44.4
+      source:     El uso masivo de automóviles también genera una mayor incidencia en los accidentes de tránsito, lo que conduce al desarrollo de nuevas técnicas en el campo de la salud para reparar los cuerpos dañados.
+      reference:  Mass car ownership also leads to a higher incidence of accidents on the roads, which leads to the invention of new techniques in healthcare for repairing damaged bodies.
+      translated: Massive use of cars also generates a greater impact on traffic accidents, leading to the development of new techniques in the field of health to repair damaged bodies.
+    es-1664  chrF 45.5
+      source:     Agite ambos polvos secos juntos y, después de hacerlo, con las manos higienizadas y húmedas, exprímalos para formar una bola.
+      reference:  Swirl the two dry powders together and then, with clean wet hands, squeeze them into a ball.
+      translated: Shake both dry powders together and, after doing so, with wet and hygienic hands, express them to form a ball.
+    es-1885  chrF 46.2
+      source:     Los internos desataron un incendio en el patio de la prisión entre las 10:00 y 11:00 p. m. MDT.
+      reference:  Between 10:00-11:00 pm MDT, a fire was started by the inmates in the yard.
+      translated: The inmates set fire in the prison yard between 10:00 and 11:00 p.m. MDT.
+    es-1693  chrF 51.2
+      source:     Mas, luego de quedar sin el wicket del capitán, India solo logró 36 carreras y 7 de sus wickets fueron derribados para finalizar las vueltas.
+      reference:  But, after losing the captain's wicket India only made 36 runs loosing 7 wickets to end the innings.
+      translated: But, after running out of the captain's wicket, India only achieved 36 runs and 7 of its wickets were shot down to finish the rounds.
+
+Valencian/Catalan to English (ca): 29 sentences
+  chrF    55.6   95% interval 51.1 to 60.6   (below the 60 line)
+  chrF++  53.7
+  BLEU    28.7   (BLEU = 28.67 62.1/35.3/22.2/14.6 (BP = 0.988 ratio = 0.988 hyp_len = 649 ref_len = 657))
+  the 8 lowest sentences by chrF:
+    ca-1974  chrF 36.8
+      source:     D'igual manera, els homes també han de posar-se pantalons que els cobreixin els genolls.
+      reference:  Along the same line, men are required to wear trousers covering the knees.
+      translated: Anyway, men also have to wear pants covering their knees.
+    ca-1663  chrF 37.7
+      source:     La vall de Cochamó: la destinació d'escalada més destacada de Xile, també anomenada la Yosemite d'Amèrica del Sud, compta amb moltes parets de granit de grans dimensions i penya-segats.
+      reference:  Cochamó Valley - Chile's premier climbing destination, known as the Yosemite of South America, with a variety of granite big walls and crags.
+      translated: The valley of Cochamó: the fate of bigger scales in Chile, also called Yosemite in South America, has many large walls of tall dimensions and cliffs.
+    ca-1772  chrF 40.9
+      source:     Així, sembla que la notació es va afegir simplement com una etiqueta.
+      reference:  So, it is likely that the notation was added simply as a label.
+      translated: So the notation seems to be added just as a label.
+    ca-1793  chrF 41.7
+      source:     Si no esteu acostumats a conduir per carreteres rurals, aneu amb compte: hi predominen els pendents pronunciats, els trams estrets i les corbes tancades.
+      reference:  If you're not used to driving on country roads, keep your wits about you: steep grades, narrow lanes, and sharp curves predominate.
+      translated: If you're not used to driving rural roads, be careful: the spoken to-dos are prevalence, narrow stretchs and closed curves.
+    ca-1977  chrF 41.8
+      source:     Les manades les formen d'un a tres mascles adults relacionats juntament amb fins a trenta femelles i cadells.
+      reference:  Prides are made up of one to three related adult males, along with as many as thirty females and cubs.
+      translated: The orders form one to three males related to thirty females and puppys.
+    ca-1851  chrF 42.6
+      source:     Els corrents de ressaca són el flux que torna després que les ones xoquin amb la platja, sovint a un escull o similars.
+      reference:  Rip currents are the returning flow from waves breaking off the beach, often at a reef or similar.
+      translated: Resaca currents are the flow that comes back after the waves run on the beach, often a choice or the like.
+    ca-1900  chrF 46.0
+      source:     De fet, i fins i tot coneixent-ne l'existència, no és gens fàcil de trobar. L'aïllament és absolut un cop arribes dins de la cova.
+      reference:  In fact, it is not easy to find at all even if one knew it existed. Once inside the cave, it is a total isolation.
+      translated: In fact, even meeting their existence, it's not easy to find, isolation is absolute once you get into the cave.
+    ca-1672  chrF 46.7
+      source:     Aneu amb compte de no permetre que el teixit s'escalfi en excés (es podria encongir o, en casos extrems, socarrar).
+      reference:  Be careful not to allow fabric to become too hot (which can cause shrinkage, or in extreme cases, scorch).
+      translated: Be careful not to allow the tissue to be warmed up in excess (you could shrink or, in extreme cases, amrar).

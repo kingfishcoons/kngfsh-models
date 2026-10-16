@@ -1,5 +1,5 @@
 eval/results/opus-mt-fp32.csv
-  opus-mt:Helsinki-NLP/opus-mt-es-en@c96e2c5 on GitHub Actions Linux x86_64, 4 CPUs, PyTorch 2.8.0+cpu fp32, eval/translate_opus_mt.py, sentences kngfsh-models@030870d
+  opus-mt:Helsinki-NLP/opus-mt-es-en@c96e2c5 on GitHub Actions Linux x86_64, 4 CPUs, PyTorch 2.8.0+cpu fp32, eval/translate_opus_mt.py, sentences kngfsh-models@7797c90
 
 Castellano to English (es): 29 sentences
   chrF    55.2   95% interval 51.7 to 58.6   (below the 60 line)

@@ -27,6 +27,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the CSV names the commit that last changed the sentences, which needs the history
 
       - uses: actions/setup-python@v5
         with:

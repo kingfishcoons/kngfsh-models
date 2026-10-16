@@ -1,0 +1,74 @@
+name: opus-mt
+
+# Measures Opus-MT (Helsinki-NLP es-en and ca-en, the app's Phase 2b candidate) on the reference pack's sentences and
+# compares it with the ML Kit translations the OnePlus 13 produced for the same sentences (eval/results/mlkit-*.csv).
+# The app's cloud sessions cannot download models; Actions runners can, and this repository is public, so its minutes
+# are free. Only actions owned by GitHub are used (the repository restricts which actions may run).
+# The results are committed to the branch the run started from (eval/results/).
+
+on:
+  workflow_dispatch:
+  # workflow_dispatch only lists workflows on the default branch, so a push to the working branch also runs it.
+  # The paths keep the bot's own results commit (eval/results/) from running it again.
+  push:
+    branches: ['claude/magical-planck-i0g7w4']
+    paths:
+      - 'eval/translate_opus_mt.py'
+      - 'eval/score_translations.py'
+      - 'eval/compare_translations.py'
+      - '.github/workflows/opus-mt.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  opus-mt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: |
+          pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install transformers==4.56.2 huggingface_hub==0.36.0 sentencepiece==0.2.1 sacremoses==0.1.1 sacrebleu==2.6.0
+
+      - name: Translate the reference sentences with Opus-MT
+        run: python3 eval/translate_opus_mt.py --manifest reference/manifest.json --out eval/results/opus-mt-fp32.csv
+
+      - name: Score Opus-MT
+        shell: bash
+        run: python3 eval/score_translations.py eval/results/opus-mt-fp32.csv --worst 8 | tee eval/results/opus-mt-fp32-scores.txt
+
+      - name: Compare with ML Kit
+        shell: bash
+        run: |
+          python3 eval/compare_translations.py eval/results/mlkit-oneplus13-1792158917008.csv eval/results/opus-mt-fp32.csv \
+            --names ML-Kit Opus-MT --show 6 | tee eval/results/compare-mlkit-vs-opus-mt-fp32.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: opus-mt-results
+          path: eval/results
+          retention-days: 14
+
+      - name: Commit the results to this branch
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add eval/results
+          if git diff --cached --quiet; then
+            echo "The results are unchanged."
+            exit 0
+          fi
+          git commit \
+            -m "Opus-MT on the reference sentences: translations, scores and the comparison with ML Kit (opus-mt.yml)" \
+            -m "Co-Authored-By: Claude <noreply@anthropic.com>" \
+            -m "Claude-Session: https://claude.ai/code/session_01LjXnwFhEW4a2eeVhqDSqEp"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

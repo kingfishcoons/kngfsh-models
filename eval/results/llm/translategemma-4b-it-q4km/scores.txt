@@ -1,0 +1,78 @@
+translategemma-4b-it-q4km/translategemma-4b-it-q4km.csv
+  translategemma-4b-it-q4km on GitHub Actions Linux x86_64, 4 CPUs, llama.cpp, eval/translate_llm.py, sentences kngfsh-models reference/manifest.json
+
+Castellano to English (es): 29 sentences
+  chrF    58.4   95% interval 54.3 to 62.3   (below the 60 line)
+  chrF++  56.2
+  BLEU    26.0   (BLEU = 25.99 61.1/33.4/19.6/11.4 (BP = 1.000 ratio = 1.093 hyp_len = 778 ref_len = 712))
+  the 8 lowest sentences by chrF:
+    es-1770  chrF 35.0
+      source:     Esto parece tener sentido, ya que en la Tierra no se percibe su movimiento, ¿cierto?
+      reference:  This seems sensible, because the Earth doesn't feel as if it's moving, does it?
+      translated: This seems logical, as we don't perceive their movement on Earth, does it?
+    es-1867  chrF 35.3
+      source:     Las plantas generan el oxígeno que las personas respiran y absorben el dióxido de carbono que ellas exhalan (que despiden).
+      reference:  Plants make oxygen which humans breathe, and they take in carbon-dioxide which humans exhale (that is, breathe out).
+      translated: Plants generate the oxygen that people breathe and absorb the carbon dioxide that people exhale (release).
+    es-1697  chrF 35.7
+      source:     No ha podido tomarse medicamentos para aliviar el dolor, porque está prohibido su uso en los Juegos.
+      reference:  He has been unable to take the drugs needed to overcome his pain as they are banned from the Games.
+      translated: He was unable to take any medication to relieve the pain, as its use is prohibited during the Games.
+    es-1664  chrF 45.5
+      source:     Agite ambos polvos secos juntos y, después de hacerlo, con las manos higienizadas y húmedas, exprímalos para formar una bola.
+      reference:  Swirl the two dry powders together and then, with clean wet hands, squeeze them into a ball.
+      translated: Mix both dry powders together, and then, using clean, damp hands, form a ball.
+    es-1761  chrF 47.3
+      source:     Más tarde, los fotógrafos ocuparon el lugar de una anciana porque necesitaba ir al baño. Mendoza fue acribillado.
+      reference:  The photographers later took the place of an aged lady as she needed the lavatory. Mendoza was gunned down.
+      translated: Later, the photographers took the elderly woman's place because she needed to use the restroom. Mendoza was overwhelmed.
+    es-1841  chrF 49.4
+      source:     Nada puede verse más que el maravilloso cielo despejado y las numerosas montañas de los alrededores. Desde el interior de esta cueva, se puede ver u oír muy poco de este mundo.
+      reference:  Nothing can be seen other than the clear, beautiful sky above and the many surrounding mountains. Very little of this world can be seen or heard from inside the cave.
+      translated: Nothing is visible except the wonderful, clear sky and the numerous surrounding mountains. From inside this cave, you can see and hear very little of the outside world.
+    es-1756  chrF 50.2
+      source:     El domingo por la noche, en un anuncio realizado mediante el secretario de prensa, el presidente de los Estados Unidos de América, Donald Trump, comunicó que las tropas estadounidenses se retirarían de Siria.
+      reference:  Late on Sunday, the United States President Donald Trump, in a statement delivered via the press secretary, announced US troops would be leaving Syria.
+      translated: On Sunday evening, through a press secretary, U.S. President Donald Trump announced that U.S. troops would be withdrawing from Syria.
+    es-1975  chrF 53.6
+      source:     Con aproximadamente 800 habitantes, la Ciudad del Vaticano es el país independiente más pequeño del mundo y el de menor población.
+      reference:  Vatican City's population is around 800. It is the smallest independent country in the world and the country with the lowest population.
+      translated: With approximately 800 inhabitants, the Vatican City is the smallest and least populated independent country in the world.
+
+Valencian/Catalan to English (ca): 29 sentences
+  chrF    59.0   95% interval 55.5 to 62.5   (below the 60 line)
+  chrF++  57.3
+  BLEU    30.9   (BLEU = 30.94 62.4/38.4/24.3/15.8 (BP = 1.000 ratio = 1.059 hyp_len = 696 ref_len = 657))
+  the 8 lowest sentences by chrF:
+    ca-1974  chrF 38.1
+      source:     D'igual manera, els homes també han de posar-se pantalons que els cobreixin els genolls.
+      reference:  Along the same line, men are required to wear trousers covering the knees.
+      translated: Similarly, men should also wear trousers that cover their knees.
+    ca-1793  chrF 40.9
+      source:     Si no esteu acostumats a conduir per carreteres rurals, aneu amb compte: hi predominen els pendents pronunciats, els trams estrets i les corbes tancades.
+      reference:  If you're not used to driving on country roads, keep your wits about you: steep grades, narrow lanes, and sharp curves predominate.
+      translated: If you are not used to driving on rural roads, be careful: they are characterized by steep inclines, narrow sections, and tight turns.
+    ca-1992  chrF 44.3
+      source:     El terme safari en l'ús popular es refereix al viatge sobre terra per veure la fantàstica vida salvatge africana, especialment a la sabana.
+      reference:  The term safari in popular use refers to overland travel to view the stunning African wildlife, particularly on savanna.
+      translated: The term "safari" is commonly used to refer to a land-based trip to see the fantastic wildlife of Africa, particularly in the savanna.
+    ca-1756  chrF 49.1
+      source:     A última hora de diumenge, el president dels Estats Units Donald Trump, en una declaració feta pública a través del secretari de premsa, va anunciar que les tropes estatunidenques abandonarien Síria.
+      reference:  Late on Sunday, the United States President Donald Trump, in a statement delivered via the press secretary, announced US troops would be leaving Syria.
+      translated: In a late-Sunday announcement made public through his press secretary, U.S. President Donald Trump announced that U.S. troops would withdraw from Syria.
+    ca-1672  chrF 50.0
+      source:     Aneu amb compte de no permetre que el teixit s'escalfi en excés (es podria encongir o, en casos extrems, socarrar).
+      reference:  Be careful not to allow fabric to become too hot (which can cause shrinkage, or in extreme cases, scorch).
+      translated: Be careful not to overcook the fabric (it could shrink or, in extreme cases, become scorched).
+    ca-1900  chrF 50.1
+      source:     De fet, i fins i tot coneixent-ne l'existència, no és gens fàcil de trobar. L'aïllament és absolut un cop arribes dins de la cova.
+      reference:  In fact, it is not easy to find at all even if one knew it existed. Once inside the cave, it is a total isolation.
+      translated: In fact, and even knowing that it exists, it is not easy to find. The isolation within the cave is complete once you enter.
+    ca-1910  chrF 50.2
+      source:     Els parisencs tenen fama de ser egocèntrics, maleducats i arrogants.
+      reference:  Parisians have a reputation for being egocentric, rude and arrogant.
+      translated: Parisians are known for being self-centered, rude, and arrogant.
+    ca-1686  chrF 50.4
+      source:     En conseqüència, el treball conjunt d'una organització per a superar una adversitat pot portar a un procés innovador per a respondre a la necessitat del client.
+      reference:  As a result, the process of an organization working together to overcome an obstacle can lead to a new innovative process to serve the customer's need.
+      translated: Consequently, the collaborative effort of an organization to overcome a challenge can lead to an innovative process for meeting the client's needs.

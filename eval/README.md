@@ -20,3 +20,15 @@ sentences are FLEURS text (CC-BY-4.0), not meeting speech, and the Catalan clips
 see `reference/README.md`. The app repository's `docs/DIVERGENCES.md` (D89, D91, D92) has the reading of the numbers.
 
 Opus-MT models: https://huggingface.co/Helsinki-NLP (CC-BY-4.0).
+
+## Translation LLMs against ML Kit (`llm-mt.yml`, 2026-10-23)
+
+| File | What it does |
+|---|---|
+| `translate_llm.py` | Runs a GGUF translation model in llama.cpp's server (greedy, the model's own prompt format) over the pack's 60 transcripts and over every shown line of the phone sessions in `sessions/`; writes the app's translations CSV and a copy of each session export with the model's English. |
+| `sessions/` | Eight table exports of the app's phone sessions on the reference tracks (OnePlus 13, 2026-10-16 and 2026-10-23), cut to the columns the scorers read: the recognized text, the language the app decoded it in, and ML Kit's English as shown. The audio was the pack's FLEURS clips played from a laptop. |
+| `score_session.py` | A copy of the app repository's `tools/score_session.py`: matches session lines to pack clips and scores the English shown, per clip and for the whole session. |
+| `side_by_side.py` | ML Kit's English and each model's English next to each other, for reading. |
+| `results/llm/` | Written by the workflow: each model's CSV, scores, the comparison with ML Kit, the session scores and `side-by-side.txt`. |
+
+Models: BSC-LT `salamandraTA-2B-instruct-GGUF` (Q4, Apache-2.0) and Google's TranslateGemma 4B (`mradermacher/translategemma-4b-it-GGUF`, Q4_K_M, Gemma terms), both at the size a phone could hold. The runner's time per sentence is a 4-core server CPU, not a phone. The app repository's `docs/DIVERGENCES.md` D101 has the reading of the numbers.

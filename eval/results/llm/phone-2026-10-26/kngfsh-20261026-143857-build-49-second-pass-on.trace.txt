@@ -1,0 +1,202 @@
++   0.000 s  start: OnePlus CPH2653, Android 36, mode AUTO, speech off, 6 threads, second pass on
++   0.024 s  models: vad ggml-silero-v6.2.0.bin, gate ggml-base-q5_1.bin, recognizer ggml-large-v3-turbo-q8_0.bin
++   0.025 s  vad: loading
++   0.029 s  vad: ready in 4 ms
++   0.029 s  recorder: open
++   0.029 s  microphone: starting
++   0.030 s  running: listening
++   0.030 s  translator: loading
++   0.043 s  translator: ready in 13 ms
++   0.043 s  speaker: starting
++   0.044 s  speaker: created
++   0.044 s  gate: loading
++   0.094 s  mic route: preferred built-in mic (bottom), routed built-in mic (bottom) (source VOICE_RECOGNITION)
++   0.160 s  gate: ready in 116 ms
++   0.160 s  recognizer: loading
++   1.375 s  recognizer: ready in 1215 ms (whisper.cpp:ggml-large-v3-turbo-q8_0)
++   1.437 s  recognizer thread: started; 0 segment(s) heard so far
++   1.439 s  second pass: loading salamandrata-2b-instruct-q4, 4 threads
++   3.466 s  second pass: ready in 2027 ms; 0 line(s) waiting
++  10.013 s  heartbeat: audio 9 s, segments heard 0, jobs done 0, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 40, lines 0; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++  13.807 s  segment #1: 5632 to 13056 ms, 7072 ms of speech, SILENCE
++  13.811 s  job L1: decoding 7.424 s of audio
++  15.957 s  job L1: TRANSLATING after 2146 ms
++  18.111 s  refine L1: ACCEPTED in 2014 ms, 57+21 tokens (prompt 1068 ms, answer 925 ms), replaced
++  20.026 s  heartbeat: audio 19 s, segments heard 1, jobs done 1, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 40, lines 1; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++  29.724 s  segment #2: start moved 60 ms earlier, over loud audio the detector did not call speech
++  29.725 s  segment #2: 17636 to 28992 ms, 9952 ms of speech, SILENCE
++  29.726 s  job L2: decoding 11.356 s of audio
++  30.044 s  heartbeat: audio 29 s, segments heard 2, jobs done 1, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 41, lines 1; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++  34.642 s  job L2: TRANSLATING after 4916 ms
++  37.846 s  refine L2: ACCEPTED in 3044 ms, 75+35 tokens (prompt 1397 ms, answer 1642 ms), replaced
++  40.054 s  heartbeat: audio 39 s, segments heard 2, jobs done 2, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 41, lines 2; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++  44.164 s  segment #3: 34016 to 43424 ms, 8352 ms of speech, SILENCE
++  44.167 s  job L3: decoding 9.408 s of audio
++  46.605 s  job L3: TRANSLATING after 2438 ms
++  49.737 s  refine L3: ACCEPTED in 3071 ms, 62+34 tokens (prompt 1229 ms, answer 1838 ms), replaced
++  50.069 s  heartbeat: audio 49 s, segments heard 3, jobs done 3, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 41, lines 3; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++  56.684 s  segment #4: 47840 to 55936 ms, 7104 ms of speech, SILENCE
++  56.686 s  job L4: decoding 8.096 s of audio
++  59.758 s  job L4: first pass shown after 3072 ms, decoding again
++  60.087 s  heartbeat: audio 59 s, segments heard 4, jobs done 3, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 40, lines 4; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++  62.704 s  job L4: TRANSLATING (loop: decoded again at 768, clean) after 6018 ms
++  65.758 s  refine L4: ACCEPTED in 3000 ms, 61+25 tokens (prompt 1590 ms, answer 1406 ms), replaced
++  70.104 s  heartbeat: audio 69 s, segments heard 4, jobs done 4, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 42, lines 4; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++  70.405 s  segment #5: 60416 to 69664 ms, 8512 ms of speech, SILENCE
++  70.406 s  job L5: decoding 9.248 s of audio
++  74.618 s  job L5: first pass shown after 4212 ms, decoding again
++  78.157 s  job L5: TRANSLATING (loop: decoded again at 768, clean) after 7751 ms
++  80.140 s  heartbeat: audio 80 s, segments heard 5, jobs done 5, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 44, lines 5; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++  82.013 s  refine L5: ACCEPTED in 3800 ms, 66+38 tokens (prompt 1698 ms, answer 2093 ms), replaced
++  83.531 s  segment #6: start moved 200 ms earlier, over loud audio the detector did not call speech
++  83.532 s  segment #6: 75992 to 81888 ms, 5152 ms of speech, LONG_PAUSE
++  83.533 s  job L6: decoding 5.896 s of audio
++  88.944 s  job L6: first pass shown after 5411 ms, decoding again
++  90.180 s  heartbeat: audio 90 s, segments heard 6, jobs done 5, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 44, lines 6; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++  93.520 s  job L6: TRANSLATING (repeat removed) (loop: decoded again at 768, still looped) after 9987 ms heard: "Avui, els únics insectes que no poden plegar les ales són les Piedimonis i l'Efímera. L'Efímera i l'Efímera i l'Efímera i l'Efímera i l'Efímera i l'Efímera i l'…"
++  96.206 s  refine L6: ACCEPTED in 2635 ms, 54+23 tokens (prompt 1337 ms, answer 1294 ms), replaced
++  97.643 s  segment #7: 87744 to 96896 ms, 8928 ms of speech, SILENCE
++  97.645 s  job L7: decoding 9.152 s of audio
++ 100.243 s  heartbeat: audio 100 s, segments heard 7, jobs done 6, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 46, lines 6; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 100.384 s  job L7: TRANSLATING after 2739 ms
++ 103.678 s  refine L7: ACCEPTED in 3236 ms, 62+31 tokens (prompt 1542 ms, answer 1689 ms), replaced
++ 110.255 s  heartbeat: audio 110 s, segments heard 7, jobs done 7, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 50, lines 7; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 113.604 s  segment #8: start moved 20 ms earlier, over loud audio the detector did not call speech
++ 113.609 s  segment #8: 101932 to 112864 ms, 9792 ms of speech, SILENCE
++ 113.609 s  job L8: decoding 10.932 s of audio
++ 119.257 s  job L8: TRANSLATING after 5648 ms
++ 120.294 s  heartbeat: audio 120 s, segments heard 8, jobs done 8, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 56, lines 8; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 122.578 s  refine L8: ACCEPTED in 3273 ms, 62+31 tokens (prompt 1550 ms, answer 1714 ms), replaced
++ 127.465 s  segment #9: 119008 to 126720 ms, 7456 ms of speech, SILENCE
++ 127.466 s  job L9: decoding 7.712 s of audio
++ 130.310 s  heartbeat: audio 130 s, segments heard 9, jobs done 8, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 56, lines 8; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 131.424 s  job L9: first pass shown after 3958 ms, decoding again
++ 135.399 s  job L9: TRANSLATING (repeat removed) (loop: decoded again at 768, still looped) after 7933 ms heard: "Se acoge a los niños en hogares de guarda por una amplia variedad de motivos, desde negligencia hasta abuso e incluso extorsión. ¿Qué es la experiencia de la vi…"
++ 138.560 s  refine L9: ACCEPTED in 3108 ms, 60+29 tokens (prompt 1484 ms, answer 1614 ms), replaced
++ 140.331 s  heartbeat: audio 140 s, segments heard 9, jobs done 9, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 62, lines 9; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 142.844 s  segment #10: 130880 to 142112 ms, 10560 ms of speech, SILENCE
++ 142.846 s  job L10: decoding 11.232 s of audio
++ 146.343 s  job L10: TRANSLATING after 3497 ms
++ 150.364 s  heartbeat: audio 150 s, segments heard 10, jobs done 10, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 67, lines 10; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 150.669 s  refine L10: ACCEPTED in 4257 ms, 74+44 tokens (prompt 1852 ms, answer 2401 ms), replaced
++ 151.684 s  segment #11: 144704 to 150944 ms, 5376 ms of speech, SILENCE
++ 151.686 s  job L11: decoding 6.24 s of audio
++ 154.371 s  job L11: TRANSLATING after 2686 ms
++ 156.525 s  refine L11: ACCEPTED in 2120 ms, 47+18 tokens (prompt 1116 ms, answer 1000 ms), replaced
++ 160.380 s  heartbeat: audio 160 s, segments heard 11, jobs done 11, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 68, lines 11; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 162.945 s  segment #12: 155840 to 161312 ms, 5152 ms of speech, LONG_PAUSE
++ 162.946 s  job L12: decoding 5.472 s of audio
++ 165.439 s  job L12: TRANSLATING after 2493 ms
++ 168.130 s  refine L12: ACCEPTED in 2641 ms, 53+22 tokens (prompt 1377 ms, answer 1259 ms), replaced
++ 170.410 s  heartbeat: audio 170 s, segments heard 12, jobs done 12, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 67, lines 12; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 177.985 s  segment #13: 165856 to 177856 ms, 11232 ms of speech, HARD_CAP
++ 177.990 s  job L13: decoding 12.0 s of audio
++ 180.437 s  heartbeat: audio 180 s, segments heard 13, jobs done 12, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 67, lines 12; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 181.682 s  job L13: TRANSLATING after 3692 ms
++ 184.940 s  refine L13: ACCEPTED in 3170 ms, 68+27 tokens (prompt 1703 ms, answer 1461 ms), replaced
++ 186.825 s  segment #14: 182112 to 185184 ms, 3072 ms of speech, LONG_PAUSE
++ 186.826 s  job L14: decoding 3.072 s of audio
++ 189.312 s  job L14: TRANSLATING after 2486 ms
++ 190.477 s  heartbeat: audio 190 s, segments heard 14, jobs done 14, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 61, lines 14; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 191.209 s  refine L14: ACCEPTED in 1867 ms, 42+15 tokens (prompt 1040 ms, answer 823 ms), replaced
++ 198.662 s  segment #15: 189792 to 197920 ms, 7552 ms of speech, SILENCE
++ 198.662 s  job L15: decoding 8.128 s of audio
++ 200.504 s  heartbeat: audio 200 s, segments heard 15, jobs done 14, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 59, lines 14; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 203.469 s  job L15: first pass shown after 4807 ms, decoding again
++ 206.782 s  job L15: TRANSLATING (loop: decoded again at 768, clean) after 8120 ms
++ 209.992 s  refine L15: ACCEPTED in 3156 ms, 61+28 tokens (prompt 1578 ms, answer 1567 ms), replaced
++ 210.044 s  segment #16: start moved 20 ms earlier, over loud audio the detector did not call speech
++ 210.045 s  segment #16: 202508 to 209312 ms, 6464 ms of speech, SILENCE
++ 210.045 s  job L16: decoding 6.804 s of audio
++ 210.539 s  heartbeat: audio 210 s, segments heard 16, jobs done 15, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 57, lines 15; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 214.131 s  job L16: first pass shown after 4086 ms, decoding again
++ 217.995 s  job L16: TRANSLATING (repeat removed) (loop: decoded again at 768, still looped) after 7950 ms heard: "Pot ser que hi hagi més mars lunars a la cara visible perquè l'escorça és més prima. Era més fàcil que la lava sortís a l'esperfície. La lava sortís a l'esperfí…"
++ 220.554 s  heartbeat: audio 220 s, segments heard 16, jobs done 16, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 53, lines 16; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 221.389 s  refine L16: ACCEPTED in 3344 ms, 66+29 tokens (prompt 1683 ms, answer 1655 ms), replaced
++ 223.944 s  segment #17: 214176 to 223200 ms, 8544 ms of speech, SILENCE
++ 223.945 s  job L17: decoding 9.024 s of audio
++ 227.306 s  job L17: first pass shown after 3361 ms, decoding again
++ 230.573 s  heartbeat: audio 230 s, segments heard 17, jobs done 16, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 50, lines 17; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 231.118 s  job L17: TRANSLATING (loop: decoded again at 768, clean) after 7173 ms
++ 238.238 s  refine L17: ACCEPTED in 7044 ms, 113+74 tokens (prompt 2797 ms, answer 4236 ms), replaced
++ 238.625 s  segment #18: start moved 20 ms earlier, over loud audio the detector did not call speech
++ 238.625 s  segment #18: 227212 to 237888 ms, 10272 ms of speech, SILENCE
++ 238.626 s  job L18: decoding 10.676 s of audio
++ 240.582 s  heartbeat: audio 240 s, segments heard 18, jobs done 17, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 49, lines 17; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 242.081 s  job L18: TRANSLATING after 3455 ms
++ 246.917 s  refine L18: ACCEPTED in 4751 ms, 82+49 tokens (prompt 1974 ms, answer 2765 ms), replaced
++ 249.084 s  segment #19: 241952 to 247456 ms, 5248 ms of speech, LONG_PAUSE
++ 249.086 s  job L19: decoding 5.504 s of audio
++ 250.607 s  heartbeat: audio 250 s, segments heard 19, jobs done 18, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 47, lines 18; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 251.681 s  job L19: TRANSLATING after 2595 ms
++ 254.108 s  refine L19: ACCEPTED in 2386 ms, 52+19 tokens (prompt 1293 ms, answer 1087 ms), replaced
++ 258.124 s  segment #20: start moved 20 ms earlier, over loud audio the detector did not call speech
++ 258.125 s  segment #20: 252396 to 256480 ms, 3840 ms of speech, LONG_PAUSE
++ 258.125 s  job L20: decoding 4.084 s of audio
++ 260.633 s  heartbeat: audio 260 s, segments heard 20, jobs done 19, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 43, lines 19; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 262.076 s  job L20: first pass shown after 3951 ms, decoding again
++ 265.514 s  job L20: TRANSLATING (loop: decoded again at 768, clean) after 7389 ms
++ 267.592 s  refine L20: ACCEPTED in 2045 ms, 46+16 tokens (prompt 1114 ms, answer 925 ms), replaced
++ 268.965 s  segment #21: start moved 20 ms earlier, over loud audio the detector did not call speech
++ 268.966 s  segment #21: 260620 to 268224 ms, 7552 ms of speech, SILENCE
++ 268.966 s  job L21: decoding 7.604 s of audio
++ 270.648 s  heartbeat: audio 270 s, segments heard 21, jobs done 20, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 43, lines 20; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 271.662 s  job L21: TRANSLATING after 2696 ms
++ 275.803 s  refine L21: ACCEPTED in 4070 ms, 72+40 tokens (prompt 1789 ms, answer 2275 ms), replaced
++ 279.964 s  segment #22: 271872 to 279232 ms, 7360 ms of speech, SILENCE
++ 279.969 s  job L22: decoding 7.36 s of audio
++ 280.664 s  heartbeat: audio 280 s, segments heard 22, jobs done 21, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 43, lines 21; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 282.651 s  job L22: TRANSLATING after 2682 ms
++ 285.857 s  refine L22: ACCEPTED in 3160 ms, 61+28 tokens (prompt 1606 ms, answer 1549 ms), replaced
++ 290.676 s  heartbeat: audio 290 s, segments heard 22, jobs done 22, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 42, lines 22; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 294.945 s  segment #23: 283680 to 294208 ms, 9760 ms of speech, SILENCE
++ 294.946 s  job L23: decoding 10.528 s of audio
++ 299.487 s  job L23: first pass shown after 4541 ms, decoding again
++ 300.708 s  heartbeat: audio 300 s, segments heard 23, jobs done 22, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 42, lines 23; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 302.995 s  job L23: TRANSLATING (loop: decoded again at 768, clean) after 8049 ms
++ 304.641 s  segment #24: 298336 to 303008 ms, 4480 ms of speech, LONG_PAUSE
++ 304.642 s  job L24: decoding 4.672 s of audio
++ 309.256 s  job L24: first pass shown after 4614 ms, decoding again
++ 310.721 s  heartbeat: audio 310 s, segments heard 24, jobs done 23, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 41, lines 24; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 312.774 s  job L24: TRANSLATING (repeat removed) (loop: decoded again at 768, still looped) after 8131 ms heard: "Així sembla que la notació es va afegir simplement com una etiqueta. Així sembla que la notació es va afegir simplement com una etiqueta. Així sembla que la not…"
++ 314.583 s  refine L23: ACCEPTED in 11541 ms, 67+32 tokens (prompt 1994 ms, answer 1805 ms, paused 7736 ms for the recognizer), replaced
++ 316.388 s  refine L24: ACCEPTED in 1803 ms, 42+14 tokens (prompt 1015 ms, answer 783 ms), replaced
++ 317.225 s  segment #25: 307712 to 316480 ms, 8544 ms of speech, SILENCE
++ 317.226 s  job L25: decoding 8.768 s of audio
++ 319.881 s  job L25: TRANSLATING after 2655 ms
++ 320.733 s  heartbeat: audio 320 s, segments heard 25, jobs done 25, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 40, lines 25; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 323.327 s  refine L25: ACCEPTED in 3377 ms, 67+31 tokens (prompt 1669 ms, answer 1704 ms), replaced
++ 329.964 s  segment #26: start moved 100 ms earlier, over loud audio the detector did not call speech
++ 329.965 s  segment #26: 321084 to 329216 ms, 7712 ms of speech, SILENCE
++ 329.966 s  job L26: decoding 8.132 s of audio
++ 330.763 s  heartbeat: audio 330 s, segments heard 26, jobs done 25, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 40, lines 25; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 332.679 s  job L26: TRANSLATING after 2713 ms
++ 336.184 s  refine L26: ACCEPTED in 3430 ms, 67+30 tokens (prompt 1726 ms, answer 1698 ms), replaced
++ 340.775 s  heartbeat: audio 340 s, segments heard 26, jobs done 26, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 39, lines 26; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 341.925 s  segment #27: start moved 20 ms earlier, over loud audio the detector did not call speech
++ 341.925 s  segment #27: 334028 to 341184 ms, 6720 ms of speech, SILENCE
++ 341.926 s  job L27: decoding 7.156 s of audio
++ 344.695 s  job L27: TRANSLATING after 2769 ms
++ 348.004 s  refine L27: ACCEPTED in 3247 ms, 69+26 tokens (prompt 1763 ms, answer 1480 ms), replaced
++ 350.821 s  heartbeat: audio 350 s, segments heard 27, jobs done 27, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 37, lines 27; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 358.625 s  segment #28: start moved 40 ms earlier, over loud audio the detector did not call speech
++ 358.626 s  segment #28: 348280 to 357888 ms, 9120 ms of speech, SILENCE
++ 358.627 s  job L28: decoding 9.608 s of audio
++ 360.853 s  heartbeat: audio 360 s, segments heard 28, jobs done 27, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 37, lines 27; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 362.859 s  job L28: first pass shown after 4232 ms, decoding again
++ 370.164 s  job L28: TRANSLATING (repeat removed) (text looked ca: decoded again in it) (loop: decoded again at 768, clean) after 11537 ms heard: "Els viatges, l'Higua, Xa, Països, Amfort, Atac, S'io, Devegades, Talviars, S'io, Aqq. Atac, Atac, Atac, Atac, Atac, Atac, Atac, Atac, Atac, Atac, Atac, Atac, At…"
++ 370.871 s  heartbeat: audio 370 s, segments heard 28, jobs done 28, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 36, lines 28; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 373.787 s  refine L28: ACCEPTED in 3560 ms, 65+35 tokens (prompt 1619 ms, answer 1931 ms), replaced
++ 375.144 s  segment #29: 363360 to 374400 ms, 10720 ms of speech, SILENCE
++ 375.145 s  job L29: decoding 11.04 s of audio
++ 378.638 s  job L29: TRANSLATING after 3493 ms
++ 380.887 s  heartbeat: audio 380 s, segments heard 29, jobs done 29, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 33, lines 29; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 382.260 s  refine L29: ACCEPTED in 3550 ms, 65+35 tokens (prompt 1616 ms, answer 1929 ms), replaced
++ 386.684 s  segment #30: start moved 40 ms earlier, over loud audio the detector did not call speech
++ 386.685 s  segment #30: 379256 to 385952 ms, 6240 ms of speech, SILENCE
++ 386.686 s  job L30: decoding 6.696 s of audio
++ 389.211 s  job L30: TRANSLATING after 2524 ms
++ 390.903 s  heartbeat: audio 390 s, segments heard 30, jobs done 30, errors 0, dropped frames 0, vad gaps 0, noise floor RMS 33, lines 30; vad ready, gate ready, recognizer ready, translator ready, second pass ready (0 waiting)
++ 392.096 s  refine L30: ACCEPTED in 2835 ms, 58+26 tokens (prompt 1405 ms, answer 1426 ms), replaced
++ 398.063 s  end: USER
++ 398.255 s  ended: 30 lines, 0 dropped, 0 failed; segments heard 30, jobs done 30, errors 0, audio 397 s

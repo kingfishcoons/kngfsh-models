@@ -88,7 +88,9 @@ jobs:
   decode:
     needs: prepare
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
+    # large-v3 decodes at about 3.5 x real time on the runner's 4 cores (turbo 0.88 x), about 160 min for the 45 min of
+    # clips; the job limit on a hosted runner is 360.
+    timeout-minutes: 330
     strategy:
       fail-fast: false
       matrix:
@@ -212,6 +214,7 @@ jobs:
             "${{ matrix.about }}" "$(stat -c %s model.bin)" "$(sha256sum eval/asr/asr_host.cpp | cut -d' ' -f1)"
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: hyps-${{ matrix.name }}
           path: hyps

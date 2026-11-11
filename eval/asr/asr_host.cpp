@@ -233,6 +233,7 @@ int main(int argc, char **argv) {
             if (p_n > 0) std::snprintf(token_p, sizeof(token_p), "%.4f", p_sum / p_n);
             else token_p[0] = '\0';
             out << clip.id << '\t' << clip.language << '\t' << static_cast<long>(ms) << '\t' << token_p << '\t' << one_line(text) << '\n';
+            out.flush();  // a run cut short by the job's time limit keeps what it decoded
             work_ms += ms;
         }
         audio_ms += static_cast<double>(clip.duration_ms);

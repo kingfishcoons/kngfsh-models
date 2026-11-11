@@ -22,6 +22,7 @@ import io
 import json
 import random
 import shutil
+import struct
 import subprocess
 import tarfile
 import wave
@@ -36,8 +37,22 @@ COLUMNS = ["id", "set", "language", "file", "duration_ms", "reference", "source"
 
 
 def wav_ms(path):
-    with wave.open(str(path)) as w:
-        return int(w.getnframes() * 1000 / w.getframerate())
+    """Duration of a WAV from its header, whatever the sample format (the Corts audio is 32-bit float, which the wave
+    module cannot open)."""
+    data = Path(path).read_bytes()
+    if data[:4] != b"RIFF" or data[8:12] != b"WAVE":
+        raise ValueError(f"{path}: not a WAV file")
+    pos, rate, channels, bits = 12, 0, 0, 0
+    while pos + 8 <= len(data):
+        chunk, size = data[pos:pos + 4], struct.unpack("<I", data[pos + 4:pos + 8])[0]
+        if chunk == b"fmt ":
+            channels, rate = struct.unpack("<HI", data[pos + 10:pos + 16])
+            bits = struct.unpack("<H", data[pos + 22:pos + 24])[0]
+        elif chunk == b"data":
+            frames = min(size, len(data) - pos - 8) // max(1, channels * bits // 8)
+            return int(frames * 1000 / rate)
+        pos += 8 + size + (size & 1)
+    raise ValueError(f"{path}: no data chunk")
 
 
 def to_pcm16(src, dst):

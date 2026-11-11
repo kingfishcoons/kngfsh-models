@@ -195,7 +195,8 @@ jobs:
 
   report:
     needs: decode
-    if: always() && needs.decode.result != 'cancelled'
+    # Score whatever models finished, but not when nothing was decoded (prepare failed) or the run was cancelled.
+    if: ${{ !cancelled() && needs.decode.result != 'skipped' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:

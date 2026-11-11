@@ -125,19 +125,42 @@ jobs:
         with:
           name: asr-clips
 
+      # A model whose text is already committed for exactly these clips, model and harness is not decoded again.
+      - name: Reuse committed results
+        id: reuse
+        env:
+          NAME: ${{ matrix.name }}
+          ABOUT: ${{ matrix.about }}
+        run: |
+          r=eval/results/asr
+          if [ -f "$r/$NAME.tsv" ] && [ -f "$r/$NAME.json" ] && cmp -s "$r/clips.tsv" clips/clips.tsv && python3 - "$r/$NAME.json" <<'PY'
+          import hashlib, json, os, sys
+          info = json.load(open(sys.argv[1]))
+          harness = hashlib.sha256(open("eval/asr/asr_host.cpp", "rb").read()).hexdigest()
+          sys.exit(0 if info.get("about") == os.environ["ABOUT"] and info.get("harness", harness) == harness else 1)
+          PY
+          then
+            mkdir -p hyps
+            cp "$r/$NAME.tsv" "$r/$NAME.json" hyps/
+            cp "$r/$NAME.log" hyps/ 2>/dev/null || true
+            echo "reuse=true" >> "$GITHUB_OUTPUT"
+            echo "Reusing the committed results of $NAME."
+          fi
+
       - uses: actions/cache@v4
+        if: steps.reuse.outputs.reuse != 'true'
         id: model
         with:
           path: model.bin
           key: asr-model-${{ matrix.name }}-${{ matrix.revision || matrix.sha256 }}-${{ env.WHISPER_CPP_TAG }}
 
       - uses: actions/setup-python@v5
-        if: steps.model.outputs.cache-hit != 'true' && matrix.kind == 'hf'
+        if: steps.reuse.outputs.reuse != 'true' && steps.model.outputs.cache-hit != 'true' && matrix.kind == 'hf'
         with:
           python-version: '3.12'
 
       - name: Get the model
-        if: steps.model.outputs.cache-hit != 'true'
+        if: steps.reuse.outputs.reuse != 'true' && steps.model.outputs.cache-hit != 'true'
         env:
           KIND: ${{ matrix.kind }}
           URL: ${{ matrix.url }}
@@ -165,7 +188,7 @@ jobs:
               df -h . | tail -1
               pip install -q torch --index-url https://download.pytorch.org/whl/cpu
               pip install -q "transformers>=4.46,<5" "huggingface_hub==0.36.0" numpy
-              python3 -c "from huggingface_hub import snapshot_download as d; print(d('$REPO', revision='$REVISION', local_dir='hf', allow_patterns=['*.json','*.txt','pytorch_model*.bin']))"
+              python3 -c "from huggingface_hub import snapshot_download as d; print(d('$REPO', revision='$REVISION', local_dir='hf', allow_patterns=['*.json','*.txt','pytorch_model*.bin'], ignore_patterns=['model.safetensors.index.json']))"
               mkdir -p openai/whisper/assets
               curl -sSL --retry 3 -o openai/whisper/assets/mel_filters.npz \
                 "https://raw.githubusercontent.com/openai/whisper/$OPENAI_WHISPER_TAG/whisper/assets/mel_filters.npz"
@@ -179,13 +202,14 @@ jobs:
           ls -l model.bin
 
       - name: Decode
+        if: steps.reuse.outputs.reuse != 'true'
         run: |
           chmod +x tools/*
           mkdir -p hyps
           tools/asr_host decode --model model.bin --manifest clips/clips.tsv --root clips \
             --out "hyps/${{ matrix.name }}.tsv" --threads "$(nproc)" 2>&1 | tee "hyps/${{ matrix.name }}.log"
-          python3 -c "import json,sys; json.dump({'about': sys.argv[1], 'bytes': int(sys.argv[2])}, open('hyps/${{ matrix.name }}.json','w'))" \
-            "${{ matrix.about }}" "$(stat -c %s model.bin)"
+          python3 -c "import json,sys; json.dump({'about': sys.argv[1], 'bytes': int(sys.argv[2]), 'harness': sys.argv[3]}, open('hyps/${{ matrix.name }}.json','w'))" \
+            "${{ matrix.about }}" "$(stat -c %s model.bin)" "$(sha256sum eval/asr/asr_host.cpp | cut -d' ' -f1)"
 
       - uses: actions/upload-artifact@v4
         with:

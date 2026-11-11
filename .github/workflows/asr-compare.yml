@@ -54,9 +54,21 @@ jobs:
         with:
           python-version: '3.12'
 
+      # Run 43033553190 sat in this step for over 15 minutes (it took 33 s the run before), most likely on a slow Ubuntu
+      # mirror: apt is bounded and retried, and if it still fails ffmpeg comes from PyPI (imageio-ffmpeg's static build).
       - name: Tools
+        timeout-minutes: 20
         run: |
-          sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+          apt_opts="-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30"
+          for attempt in 1 2; do
+            if timeout 240 sudo apt-get $apt_opts update -q && timeout 300 sudo apt-get $apt_opts install -y -q ffmpeg; then break; fi
+            echo "apt attempt $attempt failed"
+          done
+          if ! command -v ffmpeg >/dev/null; then
+            pip install imageio-ffmpeg==0.6.0
+            sudo ln -sf "$(python3 -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')" /usr/local/bin/ffmpeg
+          fi
+          ffmpeg -version | head -1
           pip install huggingface_hub==0.36.0
 
       - name: Build the harness and the quantizer (whisper.cpp ${{ env.WHISPER_CPP_TAG }})

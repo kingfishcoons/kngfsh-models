@@ -113,7 +113,7 @@ def corts(out, work, per_set, rng, rows):
         target = out / "audio" / "corts" / f"{clip_id}.wav"
         to_pcm16(found[clip_id], target)
         rows.append({
-            "id": f"corts-{clip_id[:12]}", "set": "corts", "language": "ca", "file": str(target.relative_to(out)),
+            "id": f"corts-{clip_id}", "set": "corts", "language": "ca", "file": str(target.relative_to(out)),
             "duration_ms": wav_ms(target), "reference": entries[clip_id],
             "source": f"{repo}@{rev[:7]} clean_test_short {clip_id}", "license": "CC-BY-NC-4.0",
         })
@@ -144,7 +144,7 @@ def codeswitch(out, work, per_set, rng, rows):
         target = out / "audio" / "codeswitch" / f"{r['audio_id']}.wav"
         to_pcm16(found[r["audio_id"]], target)
         rows.append({
-            "id": f"cs-{r['audio_id'][:12]}", "set": "codeswitch", "language": "auto", "file": str(target.relative_to(out)),
+            "id": f"cs-{r['audio_id']}", "set": "codeswitch", "language": "auto", "file": str(target.relative_to(out)),
             "duration_ms": wav_ms(target), "reference": r["normalized_text"].strip(),
             "source": f"{repo}@{rev[:7]} {r['source']} {r['audio_id']}", "license": "CC-BY-NC-4.0",
         })
@@ -165,9 +165,11 @@ def main():
     corts(out, work, args.per_set, random.Random(args.seed), rows)
     codeswitch(out, work, args.per_set, random.Random(args.seed + 1), rows)
     shutil.rmtree(work)
-    ids = [r["id"] for r in rows]
-    if len(ids) != len(set(ids)):
-        raise SystemExit("two clips share an id")
+    seen, twice = set(), set()
+    for r in rows:
+        (twice if r["id"] in seen else seen).add(r["id"])
+    if twice:
+        raise SystemExit(f"clips that share an id: {sorted(twice)[:10]}")
     buf = io.StringIO()
     writer = csv.DictWriter(buf, fieldnames=COLUMNS, delimiter="\t", lineterminator="\n")
     writer.writeheader()

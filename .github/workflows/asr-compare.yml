@@ -28,6 +28,7 @@ on:
 
 permissions:
   contents: write
+  actions: read  # to reuse an earlier run's decodes (REUSE_RUN_ID)
 
 concurrency:
   group: asr-compare-${{ github.ref }}
@@ -38,6 +39,9 @@ env:
   OPENAI_WHISPER_TAG: v20250625
   GATE_URL: https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-base-q5_1.bin
   GATE_SHA256: 422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898
+  # An earlier run whose decodes are reused for the models it finished, when its clips are the same as this run's
+  # (run 43017541165 decoded four models; its report failed on a scoring bug). Empty for none.
+  REUSE_RUN_ID: '43017541165'
 
 jobs:
   prepare:
@@ -127,7 +131,26 @@ jobs:
         with:
           name: asr-clips
 
-      # A model whose text is already committed for exactly these clips, model and harness is not decoded again.
+      - uses: actions/download-artifact@v4
+        if: env.REUSE_RUN_ID != ''
+        continue-on-error: true
+        with:
+          name: hyps-${{ matrix.name }}
+          path: prev/hyps
+          run-id: ${{ env.REUSE_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/download-artifact@v4
+        if: env.REUSE_RUN_ID != ''
+        continue-on-error: true
+        with:
+          name: asr-clips
+          path: prev/run
+          run-id: ${{ env.REUSE_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      # A model whose text is already committed (or in the REUSE_RUN_ID run's artifacts) for exactly these clips, model
+      # and harness is not decoded again.
       - name: Reuse committed results
         id: reuse
         env:
@@ -135,6 +158,10 @@ jobs:
           ABOUT: ${{ matrix.about }}
         run: |
           r=eval/results/asr
+          if ! [ -f "$r/$NAME.tsv" ] && [ -f "prev/hyps/$NAME.tsv" ] && [ -f prev/run/clips/clips.tsv ]; then
+            r=prev/hyps
+            cp prev/run/clips/clips.tsv "$r/clips.tsv"
+          fi
           if [ -f "$r/$NAME.tsv" ] && [ -f "$r/$NAME.json" ] && cmp -s "$r/clips.tsv" clips/clips.tsv && python3 - "$r/$NAME.json" <<'PY'
           import hashlib, json, os, sys
           info = json.load(open(sys.argv[1]))
@@ -146,7 +173,7 @@ jobs:
             cp "$r/$NAME.tsv" "$r/$NAME.json" hyps/
             cp "$r/$NAME.log" hyps/ 2>/dev/null || true
             echo "reuse=true" >> "$GITHUB_OUTPUT"
-            echo "Reusing the committed results of $NAME."
+            echo "Reusing the results of $NAME from $r."
           fi
 
       - uses: actions/cache@v4

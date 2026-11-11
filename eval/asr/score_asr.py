@@ -54,7 +54,9 @@ def normalize(text, language):
 
 def read_tsv(path, raw=False):
     """clips.tsv is written with csv's quoting; asr_host writes its text unquoted (raw)."""
-    with open(path, encoding="utf-8", newline="") as handle:
+    # A model's text can hold a broken UTF-8 sequence (a multibyte character split across tokens in a loop); it is
+    # replaced rather than stopping the report.
+    with open(path, encoding="utf-8", errors="replace", newline="") as handle:
         return list(csv.DictReader(handle, delimiter="\t", quoting=csv.QUOTE_NONE if raw else csv.QUOTE_MINIMAL))
 
 

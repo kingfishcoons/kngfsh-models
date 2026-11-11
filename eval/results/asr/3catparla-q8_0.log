@@ -1,0 +1,14 @@
+loaded model.bin in 831 ms; WHISPER : VITISAI = 0 | COREML = 0 | OPENVINO = 0 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | OPENMP = 1 | REPACK = 1 | 
+25 clips, 0.99 x real time so far
+50 clips, 1.01 x real time so far
+75 clips, 1.08 x real time so far
+100 clips, 1.13 x real time so far
+125 clips, 1.17 x real time so far
+150 clips, 1.19 x real time so far
+175 clips, 1.23 x real time so far
+200 clips, 1.23 x real time so far
+225 clips, 1.22 x real time so far
+250 clips, 1.21 x real time so far
+275 clips, 1.21 x real time so far
+300 clips, 1.20 x real time so far
+decode: 300 clips, 0 failed, 2719 s of audio in 3276 s (1.20 x real time), 4 threads

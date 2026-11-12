@@ -27,7 +27,7 @@ Opus-MT models: https://huggingface.co/Helsinki-NLP (CC-BY-4.0).
 |---|---|
 | `translate_llm.py` | Runs a GGUF translation model in llama.cpp's server (greedy, the model's own prompt format) over the pack's 60 transcripts and over every shown line of the phone sessions in `sessions/`; writes the app's translations CSV and a copy of each session export with the model's English. |
 | `sessions/` | Eight table exports of the app's phone sessions on the reference tracks (OnePlus 13, 2026-10-16 and 2026-10-23), cut to the columns the scorers read: the recognized text, the language the app decoded it in, and ML Kit's English as shown. The audio was the pack's FLEURS clips played from a laptop. |
-| `score_session.py` | A copy of the app repository's `tools/score_session.py`: matches session lines to pack clips and scores the English shown, per clip and for the whole session. |
+| `score_session.py` | A copy of the app repository's `tools/score_session.py`: matches session lines to pack clips and scores the English shown, per clip and for the whole session; `--track continuous` for the continuous-speech track. |
 | `side_by_side.py` | ML Kit's English and each model's English next to each other, for reading. |
 | `results/llm/` | Written by the workflow: each model's CSV, scores, the comparison with ML Kit, the session scores and `side-by-side.txt`. |
 

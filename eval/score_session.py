@@ -20,7 +20,10 @@ is scored as one text against all their references, beside ML Kit's perfect-tran
 
     pip install sacrebleu jiwer
     python3 tools/score_session.py kngfsh-<session>.csv [more sessions] \\
-        [--r1 docs/measurements/r1-translations-oneplus13-1792158917008.csv] [--worst 6]
+        [--r1 docs/measurements/r1-translations-oneplus13-1792158917008.csv] [--worst 6] [--track continuous]
+
+The continuous-speech track (kngfsh-models `reference/tracks/`) needs `--track continuous`: it also scores each
+language's monologue as one text, since the hard cap cuts most of its sentences in two.
 """
 import argparse
 import csv
@@ -80,17 +83,30 @@ def load_clips(path=REFERENCE):
     return clips
 
 
-def track_clips(clips, per_clip):
-    """The clips the session's track played, in order, up to the last one a line matched (D81: the es and ca tracks
-    are every clip of the language in id order without es-1780 and ca-1992; the mixed track alternates the first 15
-    of each, es first). Empty when the matched clips fit no track."""
+TRACKS = ("es", "ca", "mixed", "continuous")
+
+
+def tracks(clips):
+    """The phone-test tracks' clip orders. D81: the es and ca tracks are every clip of the language in id order
+    without es-1780 and ca-1992; the mixed track alternates the first 15 of each, es first. The continuous track
+    (kngfsh-models `reference/tracks/kngfsh-ref-continuous`) plays the mixed track's 15 es clips back to back, 0.4 s
+    apart, then its 15 ca clips."""
     def by_language(language):
         return sorted((c for c in clips if c["language"] == language and c["id"] not in TRACK_LEFT_OUT),
                       key=lambda c: c["id"])
     es, ca = by_language("es"), by_language("ca")
-    mixed = [c for pair in zip(es[:15], ca[:15]) for c in pair]
+    return {"es": es, "ca": ca, "mixed": [c for pair in zip(es[:15], ca[:15]) for c in pair],
+            "continuous": es[:15] + ca[:15]}
+
+
+def track_clips(clips, per_clip, name=None):
+    """The clips the session's track played, in order, up to the last one a line matched. With no name, the first
+    track (es, ca, mixed) that holds every matched clip; the continuous track holds the mixed track's clips in
+    another order, so it is only taken when named. Empty when the matched clips fit no track."""
     heard = set(per_clip)
-    for track in (es, ca, mixed):
+    candidates = tracks(clips)
+    for key in ([name] if name else TRACKS[:3]):
+        track = candidates[key]
         ids = [c["id"] for c in track]
         if heard and heard <= set(ids):
             last = max(ids.index(h) for h in heard)
@@ -105,7 +121,7 @@ def load_r1(path):
         return {r["id"]: unguard(r["hypothesis"]) for r in csv.DictReader(handle) if r["status"] == "ok"}
 
 
-def score_session(path, clips, r1, worst):
+def score_session(path, clips, r1, worst, track=None):
     with open(path, encoding="utf-8-sig", newline="") as handle:
         rows = list(csv.DictReader(handle))
     if not rows or "source" not in rows[0]:
@@ -136,7 +152,7 @@ def score_session(path, clips, r1, worst):
         previous = best
         per_clip.setdefault(best["id"], []).append((r, share))
 
-    played = track_clips(clips, per_clip)
+    played = track_clips(clips, per_clip, track)
     lost = [c for c in played if c["id"] not in per_clip]
     results = []
     for clip in clips:
@@ -175,6 +191,8 @@ def score_session(path, clips, r1, worst):
         print(f"  whole session: {len(played)} clips played, {len(lost)} with no line of their own "
               f"({', '.join(c['id'] for c in lost) or 'none'}); chrF live {live:5.1f}  clean {clean:5.1f}  "
               f"loss {clean - live:5.1f}")
+    if track == "continuous" and played:
+        continuous_report(shown, per_clip, played)
     for language in ("es", "ca"):
         rs = [x for x in results if x["clip"]["language"] == language]
         if not rs:
@@ -209,17 +227,47 @@ def score_session(path, clips, r1, worst):
     return results
 
 
+def continuous_report(shown, per_clip, played):
+    """The continuous track cuts most sentences at the hard cap, so a line holds the end of one clip and the start of
+    the next and the clip-level WER above means little. Here each language's monologue is scored as one text: every
+    shown line in order (a junk line goes with the language of the line before it) against the transcripts of the
+    clips played in that language. Then the flags that tell the cap's story."""
+    language_of = {r["line"]: clip_id[:2] for clip_id, lines in per_clip.items() for r, _ in lines}
+    hyps, current = {"es": [], "ca": []}, None
+    for r in shown:
+        current = language_of.get(r["line"], current)
+        if current in hyps:
+            hyps[current].append(unguard(r["source"]))
+    for language in ("es", "ca"):
+        refs = [c for c in played if c["language"] == language]
+        if not refs:
+            continue
+        ref = " ".join(" ".join(words(c["source"])) for c in refs)
+        hyp = " ".join(" ".join(words(h)) for h in hyps[language])
+        live = chrf(" ".join(unguard(r["english"]) for r in shown if language_of.get(r["line"]) == language),
+                    " ".join(c["reference"] for c in refs))
+        print(f"  continuous {language}: {len(refs)} clips as one text, {len(hyps[language])} lines, "
+              f"WER {100 * jiwer.wer(ref, hyp or '-'):4.1f} %, chrF of the English {live:5.1f}")
+    counts = {}
+    for r in shown:
+        for flag in r["flags"].split():
+            counts[flag] = counts.get(flag, 0) + 1
+    print(f"  flags on {len(shown)} shown lines: " + (", ".join(f"{f} {n}" for f, n in sorted(counts.items())) or "none"))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("sessions", nargs="+", help="table exports (kngfsh-<session>.csv)")
     parser.add_argument("--r1", help="the R1 translations CSV, for the clean-transcript comparison")
     parser.add_argument("--worst", type=int, default=6)
+    parser.add_argument("--track", choices=TRACKS,
+                        help="the track the session played; needed for the continuous track (default: guessed)")
     parser.add_argument("--reference", default=REFERENCE,
                         help="reference sentences: the app's bench JSON (default) or the pack's manifest.json")
     args = parser.parse_args()
     clips, r1 = load_clips(args.reference), load_r1(args.r1)
     for path in args.sessions:
-        score_session(path, clips, r1, args.worst)
+        score_session(path, clips, r1, args.worst, args.track)
 
 
 if __name__ == "__main__":

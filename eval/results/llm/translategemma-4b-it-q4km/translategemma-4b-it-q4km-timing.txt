@@ -1,0 +1,1 @@
+translategemma-4b-it-q4km: 245 distinct texts; per text on the runner (GitHub Actions Linux x86_64, 4 CPUs, llama.cpp): median 5680 ms, 90th percentile 6802 ms, max 26332 ms

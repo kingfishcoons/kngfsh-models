@@ -1,0 +1,113 @@
+### ML Kit as shown on the phone
+
+== 20261016-112306 (kngfsh-20261016-112306.csv): 30 lines, mode LOCK_CA; 28 clips matched, 1 dropped, 0 junk lines
+  whole session: 28 clips played, 0 with no line of their own (none); chrF live  60.4  clean  65.5  loss   5.1
+  ca: 28 clips  chrF live  50.9  clean (R1, same clips)  57.2  loss   6.3   WER 16.5 %
+  causes (clips; mean chrF lost against clean): ok 17 (-0.5), asr 11 (+15.0), extra 2 (+11.9), split 1 (-0.3)
+  dropped L4 (LOW_CONFIDENCE): 'E aí'
+
+== 20261016-113010 (kngfsh-20261016-113010.csv): 31 lines, mode AUTO; 29 clips matched, 0 dropped, 2 junk lines
+  whole session: 30 clips played, 1 with no line of their own (es-1770); chrF live  59.5  clean  63.0  loss   3.5
+  es: 14 clips  chrF live  46.7  clean (R1, same clips)  48.6  loss   1.9   WER  6.3 %
+  ca: 15 clips  chrF live  49.7  clean (R1, same clips)  56.6  loss   6.9   WER 20.5 %
+  causes (clips; mean chrF lost against clean): ok 21 (-0.4), asr 8 (+16.3), lang 2 (+49.3), extra 1 (+49.9)
+  junk L14 [es, SPEECH_SKIPPED]: 'Gracias.' -> 'Thank you.'
+  junk L20 [es, SPEECH_SKIPPED]: 'Vocabulario.' -> 'Vocabulary.'
+
+== 20261016-121610 (kngfsh-20261016-121610.csv): 30 lines, mode AUTO; 29 clips matched, 1 dropped, 0 junk lines
+  whole session: 30 clips played, 1 with no line of their own (ca-1829); chrF live  60.1  clean  63.0  loss   2.9
+  es: 15 clips  chrF live  46.9  clean (R1, same clips)  47.7  loss   0.9   WER  4.4 %
+  ca: 14 clips  chrF live  53.2  clean (R1, same clips)  54.3  loss   1.2   WER 12.6 %
+  causes (clips; mean chrF lost against clean): ok 24 (-0.0), asr 5 (+3.7), extra 1 (-1.7)
+  dropped L28 (REPETITION): 'A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.'
+
+== 20261023-105030 (kngfsh-20261023-105030.csv): 29 lines, mode AUTO; 27 clips matched, 0 dropped, 1 junk lines
+  whole session: 28 clips played, 1 with no line of their own (es-1800); chrF live  56.3  clean  62.4  loss   6.1
+  es: 27 clips  chrF live  49.2  clean (R1, same clips)  51.9  loss   2.8   WER 11.4 %
+  causes (clips; mean chrF lost against clean): ok 19 (+2.0), asr 8 (+4.0), extra 2 (+2.1), split 1 (+3.6)
+  junk L6 [es, no flags]: 'Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' -> 'Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+== 20261023-105800 (kngfsh-20261023-105800.csv): 28 lines, mode AUTO; 28 clips matched, 0 dropped, 0 junk lines
+  whole session: 28 clips played, 0 with no line of their own (none); chrF live  59.8  clean  65.5  loss   5.7
+  ca: 28 clips  chrF live  49.9  clean (R1, same clips)  57.2  loss   7.3   WER 19.2 %
+  causes (clips; mean chrF lost against clean): ok 16 (+0.9), asr 11 (+13.3), extra 4 (+16.0), lang 2 (+16.7)
+
+== 20261023-110608 (kngfsh-20261023-110608.csv): 30 lines, mode AUTO; 30 clips matched, 0 dropped, 0 junk lines
+  whole session: 30 clips played, 0 with no line of their own (none); chrF live  60.9  clean  63.0  loss   2.1
+  es: 15 clips  chrF live  47.2  clean (R1, same clips)  47.7  loss   0.6   WER  2.7 %
+  ca: 15 clips  chrF live  51.9  clean (R1, same clips)  56.6  loss   4.7   WER 22.8 %
+  causes (clips; mean chrF lost against clean): ok 21 (-0.5), asr 9 (+9.5), lang 1 (+20.5), extra 1 (+20.5)
+
+== 20261023-115705 (kngfsh-20261023-115705.csv): 53 lines, mode AUTO; 30 clips matched, 2 dropped, 3 junk lines
+  whole session: 30 clips played, 0 with no line of their own (none); chrF live  57.3  clean  63.0  loss   5.8
+  es: 15 clips  chrF live  45.6  clean (R1, same clips)  47.7  loss   2.2   WER  7.4 %
+  ca: 15 clips  chrF live  43.8  clean (R1, same clips)  56.6  loss  12.8   WER 24.6 %
+  causes (clips; mean chrF lost against clean): split 18 (+6.4), asr 9 (+7.9), ok 6 (+4.7), extra 2 (+11.2), lang 2 (+17.0)
+  junk L13 [es, no flags]: 'Vocabulario, ESO, CEIP, IES, ITACA, NEE, TDAH, DE CREDIT, FUERON DERRIBADOS PARA FINALIZAR' -> 'Vocabulary, ESO, CEIP, IES, ITACA, NEE, TDAH, Credit, were knocked dow'
+  junk L35 [ca, no flags]: 'I està.' -> 'And it is.'
+  junk L39 [ca, no flags]: '...sinc de no en treballen. ...' -> '... SINC of not working. ...'
+  dropped L28 (LOW_CONFIDENCE): 'per fer-se.'
+  dropped L54 (LOW_CONFIDENCE): 'I ja.'
+
+== 20261023-120441 (kngfsh-20261023-120441.csv): 28 lines, mode AUTO; 28 clips matched, 0 dropped, 0 junk lines
+  whole session: 28 clips played, 0 with no line of their own (none); chrF live  61.2  clean  63.0  loss   1.8
+  es: 14 clips  chrF live  47.2  clean (R1, same clips)  47.6  loss   0.4   WER  1.8 %
+  ca: 14 clips  chrF live  53.2  clean (R1, same clips)  57.4  loss   4.1   WER 18.8 %
+  causes (clips; mean chrF lost against clean): ok 23 (-0.0), asr 5 (+9.5), extra 2 (+9.6), lang 1 (+20.8)
+
+### translategemma-4b-it-q4km on the same recognized text (clean: translategemma-4b-it-q4km on the perfect transcripts)
+
+== 20261016-112306 (kngfsh-20261016-112306.csv): 30 lines, mode LOCK_CA; 28 clips matched, 1 dropped, 0 junk lines
+  whole session: 28 clips played, 0 with no line of their own (none); chrF live  62.2  clean  67.8  loss   5.6
+  ca: 28 clips  chrF live  52.1  clean (R1, same clips)  59.5  loss   7.4   WER 16.5 %
+  causes (clips; mean chrF lost against clean): ok 17 (+1.2), asr 11 (+19.6), extra 2 (+18.5), split 1 (+10.1)
+  dropped L4 (LOW_CONFIDENCE): 'E aí'
+
+== 20261016-113010 (kngfsh-20261016-113010.csv): 31 lines, mode AUTO; 29 clips matched, 0 dropped, 2 junk lines
+  whole session: 30 clips played, 1 with no line of their own (es-1770); chrF live  60.7  clean  66.1  loss   5.4
+  es: 14 clips  chrF live  51.3  clean (R1, same clips)  56.2  loss   4.9   WER  6.3 %
+  ca: 15 clips  chrF live  49.5  clean (R1, same clips)  57.9  loss   8.3   WER 20.5 %
+  causes (clips; mean chrF lost against clean): ok 21 (+4.4), asr 8 (+15.9), lang 2 (+37.4), extra 1 (+53.5)
+  junk L14 [es, SPEECH_SKIPPED]: 'Gracias.' -> 'Thank you.'
+  junk L20 [es, SPEECH_SKIPPED]: 'Vocabulario.' -> 'Vocabulary.'
+
+== 20261016-121610 (kngfsh-20261016-121610.csv): 30 lines, mode AUTO; 29 clips matched, 1 dropped, 0 junk lines
+  whole session: 30 clips played, 1 with no line of their own (ca-1829); chrF live  63.1  clean  66.1  loss   3.0
+  es: 15 clips  chrF live  54.3  clean (R1, same clips)  55.3  loss   1.0   WER  4.4 %
+  ca: 14 clips  chrF live  54.4  clean (R1, same clips)  57.5  loss   3.1   WER 12.6 %
+  causes (clips; mean chrF lost against clean): ok 24 (+1.9), asr 5 (+8.6), extra 1 (+35.7)
+  dropped L28 (REPETITION): 'A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.A.B.'
+
+== 20261023-105030 (kngfsh-20261023-105030.csv): 29 lines, mode AUTO; 27 clips matched, 0 dropped, 1 junk lines
+  whole session: 28 clips played, 1 with no line of their own (es-1800); chrF live  58.5  clean  66.6  loss   8.1
+  es: 27 clips  chrF live  53.0  clean (R1, same clips)  57.5  loss   4.5   WER 11.4 %
+  causes (clips; mean chrF lost against clean): ok 19 (+4.0), asr 8 (+5.3), extra 2 (+6.1), split 1 (+5.2)
+  junk L6 [es, no flags]: 'Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' -> 'Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+== 20261023-105800 (kngfsh-20261023-105800.csv): 28 lines, mode AUTO; 28 clips matched, 0 dropped, 0 junk lines
+  whole session: 28 clips played, 0 with no line of their own (none); chrF live  63.1  clean  67.8  loss   4.7
+  ca: 28 clips  chrF live  53.7  clean (R1, same clips)  59.5  loss   5.9   WER 19.2 %
+  causes (clips; mean chrF lost against clean): ok 16 (+3.0), asr 11 (+13.6), extra 4 (+26.0), lang 2 (+1.8)
+
+== 20261023-110608 (kngfsh-20261023-110608.csv): 30 lines, mode AUTO; 30 clips matched, 0 dropped, 0 junk lines
+  whole session: 30 clips played, 0 with no line of their own (none); chrF live  63.9  clean  66.1  loss   2.2
+  es: 15 clips  chrF live  53.2  clean (R1, same clips)  55.3  loss   2.2   WER  2.7 %
+  ca: 15 clips  chrF live  53.9  clean (R1, same clips)  57.9  loss   3.9   WER 22.8 %
+  causes (clips; mean chrF lost against clean): ok 21 (+1.9), asr 9 (+7.1), lang 1 (+13.8), extra 1 (+13.8)
+
+== 20261023-115705 (kngfsh-20261023-115705.csv): 53 lines, mode AUTO; 30 clips matched, 2 dropped, 3 junk lines
+  whole session: 30 clips played, 0 with no line of their own (none); chrF live  60.2  clean  66.1  loss   5.9
+  es: 15 clips  chrF live  52.7  clean (R1, same clips)  55.3  loss   2.6   WER  7.4 %
+  ca: 15 clips  chrF live  48.8  clean (R1, same clips)  57.9  loss   9.1   WER 24.6 %
+  causes (clips; mean chrF lost against clean): split 18 (+4.0), asr 9 (+8.9), ok 6 (+6.7), extra 2 (+4.0), lang 2 (+2.1)
+  junk L13 [es, no flags]: 'Vocabulario, ESO, CEIP, IES, ITACA, NEE, TDAH, DE CREDIT, FUERON DERRIBADOS PARA FINALIZAR' -> 'Vocabulary, secondary education (ESO), primary school (CEIP), high sch'
+  junk L35 [ca, no flags]: 'I està.' -> 'It is.'
+  junk L39 [ca, no flags]: '...sinc de no en treballen. ...' -> "...but they don't use them."
+  dropped L28 (LOW_CONFIDENCE): 'per fer-se.'
+  dropped L54 (LOW_CONFIDENCE): 'I ja.'
+
+== 20261023-120441 (kngfsh-20261023-120441.csv): 28 lines, mode AUTO; 28 clips matched, 0 dropped, 0 junk lines
+  whole session: 28 clips played, 0 with no line of their own (none); chrF live  62.3  clean  65.0  loss   2.7
+  es: 14 clips  chrF live  51.6  clean (R1, same clips)  53.0  loss   1.4   WER  1.8 %
+  ca: 14 clips  chrF live  52.7  clean (R1, same clips)  58.0  loss   5.3   WER 18.8 %
+  causes (clips; mean chrF lost against clean): ok 23 (+2.5), asr 5 (+13.8), extra 2 (+21.6), lang 1 (+7.6)

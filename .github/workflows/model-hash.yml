@@ -1,0 +1,54 @@
+# Checks that a hosted whisper.cpp q8_0 file is byte for byte the file the recognizer comparison measured (D104), so
+# the app's registry can pin it. The measured file is not hosted anywhere: asr-compare quantized ggerganov's large-v3
+# (f16) with whisper.cpp v1.9.5's quantizer. Quantizing is deterministic, so the same steps give the same bytes.
+name: model-hash
+
+on:
+  push:
+    paths:
+      - .github/workflows/model-hash.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  WHISPER_CPP_TAG: v1.9.5
+  SOURCE_URL: https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3.bin
+  SOURCE_SHA256: 64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2
+  HOSTED_URL: https://huggingface.co/terriblekiwi/whisper-large-v3-whispercpp-q8_0/resolve/febb9a40ee57a90b95bf2ccca132ab44b72cc322/ggml-whisper-large-v3-q8_0.bin
+
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the quantizer (whisper.cpp ${{ env.WHISPER_CPP_TAG }})
+        run: |
+          git clone --depth 1 --branch "$WHISPER_CPP_TAG" https://github.com/ggml-org/whisper.cpp.git whisper.cpp
+          cmake -S eval/asr -B build -DWHISPER_DIR="$PWD/whisper.cpp" -DCMAKE_BUILD_TYPE=Release \
+            -DGGML_NATIVE=OFF -DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON
+          cmake --build build --target whisper-quantize -j "$(nproc)"
+          find build -name 'whisper-quantize' -type f -perm -u+x | head -1 | xargs -I{} cp {} ./whisper-quantize
+
+      - name: Quantize ggerganov's large-v3 the way asr-compare did
+        run: |
+          curl -fsSL --retry 5 -o large-v3-f16.bin "$SOURCE_URL"
+          echo "$SOURCE_SHA256  large-v3-f16.bin" | sha256sum -c -
+          ./whisper-quantize large-v3-f16.bin measured-q8_0.bin q8_0 > quantize.log 2>&1 || { tail -20 quantize.log; exit 1; }
+          rm large-v3-f16.bin
+
+      - name: Fetch the hosted file and compare
+        run: |
+          curl -fsSL --retry 5 -o hosted-q8_0.bin "$HOSTED_URL"
+          for f in measured-q8_0.bin hosted-q8_0.bin; do
+            echo "$f: $(stat -c %s "$f") bytes, sha256 $(sha256sum "$f" | cut -d' ' -f1)"
+          done
+          if cmp -s measured-q8_0.bin hosted-q8_0.bin; then
+            echo "IDENTICAL: the hosted file is the one D104 measured"
+          else
+            echo "DIFFERENT: first differing bytes:"; cmp measured-q8_0.bin hosted-q8_0.bin | head -1
+            cmp -l measured-q8_0.bin hosted-q8_0.bin | wc -l | xargs echo "bytes that differ:"
+          fi

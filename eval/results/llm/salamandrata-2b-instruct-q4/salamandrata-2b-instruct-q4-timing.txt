@@ -1,0 +1,1 @@
+salamandrata-2b-instruct-q4: 245 distinct texts; per text on the runner (GitHub Actions Linux x86_64, 4 CPUs, llama.cpp): median 3212 ms, 90th percentile 4019 ms, max 19743 ms

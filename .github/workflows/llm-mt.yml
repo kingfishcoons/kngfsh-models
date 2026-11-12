@@ -1,0 +1,146 @@
+name: llm-mt
+
+# Measures two small translation LLMs against ML Kit (the app's translator) on what the app actually translates:
+# the reference pack's 60 transcripts and the recognized text of eight phone sessions (eval/sessions/). The question
+# it answers (kngfsh-translate DIVERGENCES D101): is a model clearly better than ML Kit, enough to build it into the app?
+# Each model runs in llama.cpp's server on the runner's CPU, at the 4-bit size a phone could hold. The app's cloud
+# sessions cannot download models; Actions runners can, and this repository is public, so its minutes are free. Only
+# actions owned by GitHub are used (the repository restricts which actions may run). Results are committed to the
+# branch the run started from (eval/results/llm/).
+
+on:
+  workflow_dispatch:
+  # workflow_dispatch only lists workflows on the default branch, so a push to the working branch also runs it.
+  # The paths keep the bot's own results commit (eval/results/) from running it again.
+  push:
+    branches: ['claude/zen-sagan-96r3mm']
+    paths:
+      - 'eval/translate_llm.py'
+      - 'eval/side_by_side.py'
+      - 'eval/score_session.py'
+      - 'eval/sessions/**'
+      - '.github/workflows/llm-mt.yml'
+
+permissions:
+  contents: write
+
+env:
+  LLAMA_CPP_TAG: b11800
+
+jobs:
+  translate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - engine: salamandrata-2b-instruct-q4
+            repo: BSC-LT/salamandraTA-2B-instruct-GGUF
+            revision: f8dd48ca1de2f65ec494a6d03f1005f8d509a738
+            file: salamandrata_2b_inst_q4.gguf
+            style: salamandra
+          - engine: translategemma-4b-it-q4km
+            repo: mradermacher/translategemma-4b-it-GGUF
+            revision: d37868f759d2f817a43d28dd80cf9f982ffa62fd
+            file: translategemma-4b-it.Q4_K_M.gguf
+            style: gemma
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/cache@v4
+        id: llama
+        with:
+          path: llama.cpp/build/bin
+          key: llama-server-${{ env.LLAMA_CPP_TAG }}-${{ runner.os }}
+
+      - name: Build llama-server
+        if: steps.llama.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q libcurl4-openssl-dev
+          git clone --depth 1 --branch "$LLAMA_CPP_TAG" https://github.com/ggml-org/llama.cpp.git
+          cmake -S llama.cpp -B llama.cpp/build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON \
+            -DBUILD_SHARED_LIBS=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF
+          cmake --build llama.cpp/build --target llama-server -j "$(nproc)"
+
+      - name: Download the model
+        id: model
+        run: |
+          pip install huggingface_hub==0.36.0
+          path=$(python3 -c "from huggingface_hub import hf_hub_download as d; print(d('${{ matrix.repo }}', '${{ matrix.file }}', revision='${{ matrix.revision }}'))")
+          ls -l "$path"
+          echo "path=$path" >> "$GITHUB_OUTPUT"
+
+      - name: Translate
+        run: |
+          python3 eval/translate_llm.py --server llama.cpp/build/bin/llama-server --model "${{ steps.model.outputs.path }}" \
+            --engine "${{ matrix.engine }}" --style "${{ matrix.style }}" --out "out/${{ matrix.engine }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.engine }}
+          path: out/${{ matrix.engine }}
+          retention-days: 14
+
+  report:
+    needs: translate
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: pip install sacrebleu==2.6.0 jiwer==4.0.0
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: eval/results/llm
+
+      - name: Score
+        shell: bash
+        run: |
+          set -o pipefail
+          cd eval/results/llm
+          mlkit=../mlkit-oneplus13-1792158917008.csv
+          sides=()
+          for engine in */; do
+            engine=${engine%/}
+            [ -f "$engine/$engine.csv" ] || continue
+            python3 ../../score_translations.py "$engine/$engine.csv" --worst 8 | tee "$engine/scores.txt"
+            python3 ../../compare_translations.py "$mlkit" "$engine/$engine.csv" --names ML-Kit "$engine" --show 8 \
+              | tee "compare-mlkit-vs-$engine.txt"
+            {
+              echo "### ML Kit as shown on the phone"
+              python3 ../../score_session.py ../../sessions/kngfsh-*.csv --r1 "$mlkit" --reference ../../../reference/manifest.json --worst 0
+              echo
+              echo "### $engine on the same recognized text (clean: $engine on the perfect transcripts)"
+              python3 ../../score_session.py "$engine"/sessions/kngfsh-*.csv --r1 "$engine/$engine.csv" --reference ../../../reference/manifest.json --worst 0
+            } | tee "sessions-mlkit-vs-$engine.txt"
+            sides+=(--candidate "$engine=$engine/$engine.csv=$engine/sessions")
+          done
+          python3 ../../side_by_side.py --mlkit "$mlkit" "${sides[@]}" --sessions ../../sessions --out side-by-side.txt
+
+      - name: Commit the results to this branch
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add eval/results/llm
+          if git diff --cached --quiet; then
+            echo "The results are unchanged."
+            exit 0
+          fi
+          git commit \
+            -m "Translation LLMs against ML Kit: translations, scores and side-by-side (llm-mt.yml)" \
+            -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" \
+            -m "Claude-Session: https://claude.ai/code/session_01AuZCrEfQ5hUkwwCQLrSf9A"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

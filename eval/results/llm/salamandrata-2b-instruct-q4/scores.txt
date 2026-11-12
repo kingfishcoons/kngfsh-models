@@ -1,0 +1,78 @@
+salamandrata-2b-instruct-q4/salamandrata-2b-instruct-q4.csv
+  salamandrata-2b-instruct-q4 on GitHub Actions Linux x86_64, 4 CPUs, llama.cpp, eval/translate_llm.py, sentences kngfsh-models reference/manifest.json
+
+Castellano to English (es): 29 sentences
+  chrF    59.2   95% interval 55.3 to 63.5   (below the 60 line)
+  chrF++  57.1
+  BLEU    30.2   (BLEU = 30.20 66.5/36.9/23.0/14.9 (BP = 0.997 ratio = 0.997 hyp_len = 710 ref_len = 712))
+  the 8 lowest sentences by chrF:
+    es-1770  chrF 27.0
+      source:     Esto parece tener sentido, ya que en la Tierra no se percibe su movimiento, ¿cierto?
+      reference:  This seems sensible, because the Earth doesn't feel as if it's moving, does it?
+      translated: This makes sense, since you can't see it moving on Earth, right?
+    es-1867  chrF 39.7
+      source:     Las plantas generan el oxígeno que las personas respiran y absorben el dióxido de carbono que ellas exhalan (que despiden).
+      reference:  Plants make oxygen which humans breathe, and they take in carbon-dioxide which humans exhale (that is, breathe out).
+      translated: Plants make the oxygen that people breathe and absorb the carbon dioxide that they exhale (or give off).
+    es-1693  chrF 42.5
+      source:     Mas, luego de quedar sin el wicket del capitán, India solo logró 36 carreras y 7 de sus wickets fueron derribados para finalizar las vueltas.
+      reference:  But, after losing the captain's wicket India only made 36 runs loosing 7 wickets to end the innings.
+      translated: However, with the captain's wicket gone, India had only 36 runs and seven of their wickets were taken to finish the laps.
+    es-1697  chrF 48.4
+      source:     No ha podido tomarse medicamentos para aliviar el dolor, porque está prohibido su uso en los Juegos.
+      reference:  He has been unable to take the drugs needed to overcome his pain as they are banned from the Games.
+      translated: She has been unable to take painkillers, as they are prohibited for use during the Games.
+    es-1911  chrF 50.3
+      source:     De la misma manera, al contar con un visado Schengen, no precisa gestionar permisos para cada uno de los países miembros de este espacio por separado. Ello le ahorrará tiempo, dinero y papeleo.
+      reference:  Similarly, by having a Schengen visa, you do not need to apply for visas to each of the Schengen member countries separately, hence saving time, money and paperwork.
+      translated: Similarly, having a Schengen visa does not require you to obtain permits for each individual Schengen country. This saves you time, money and paperwork.
+    es-1885  chrF 50.4
+      source:     Los internos desataron un incendio en el patio de la prisión entre las 10:00 y 11:00 p. m. MDT.
+      reference:  Between 10:00-11:00 pm MDT, a fire was started by the inmates in the yard.
+      translated: Inmates started a fire in the prison yard between 10:00 and 11:00 p.m. MDT.
+    es-1995  chrF 52.3
+      source:     Los andamiajes virtuales se encuentran incorporados al software y su función es cuestionar, estimular o explicar procedimientos que pueden haber resultado complejos para el estudiante por sí solo.
+      reference:  Virtual Scaffolds are internalized in the software and are meant to question, prompt, and explain procedures that may have been to challenging for the student to handle alone.
+      translated: Virtual scaffolds are embedded in software and are designed to challenge, stimulate, or explain procedures that might have been too complex for the learner to do on their own.
+    es-1763  chrF 52.4
+      source:     La Vía Láctea influeye en la galaxia de Sagitario del mismo modo en que la luna ejerce una fuerza de atracción sobre nuestro planeta y causa las mareas.
+      reference:  Just like the moon exerts a pull on the earth, causing tides, so does the Milky Way exert a force on the Sagittarius galaxy.
+      translated: The Milky Way influeces the Sagittarius galaxy in the same way that the moon exerts a gravitational pull on our planet and causes the tides.
+
+Valencian/Catalan to English (ca): 29 sentences
+  chrF    63.6   95% interval 59.1 to 68.3   (at or above the 60 line)
+  chrF++  62.5
+  BLEU    42.0   (BLEU = 41.95 71.1/48.8/35.5/26.3 (BP = 0.989 ratio = 0.989 hyp_len = 650 ref_len = 657))
+  the 8 lowest sentences by chrF:
+    ca-1974  chrF 24.9
+      source:     D'igual manera, els homes també han de posar-se pantalons que els cobreixin els genolls.
+      reference:  Along the same line, men are required to wear trousers covering the knees.
+      translated: Similarly, men should wear pants that cover their knees.
+    ca-1851  chrF 34.8
+      source:     Els corrents de ressaca són el flux que torna després que les ones xoquin amb la platja, sovint a un escull o similars.
+      reference:  Rip currents are the returning flow from waves breaking off the beach, often at a reef or similar.
+      translated: A surge is the flow that comes back after the waves have hit the beach, often to a reef or the like.
+    ca-1793  chrF 46.6
+      source:     Si no esteu acostumats a conduir per carreteres rurals, aneu amb compte: hi predominen els pendents pronunciats, els trams estrets i les corbes tancades.
+      reference:  If you're not used to driving on country roads, keep your wits about you: steep grades, narrow lanes, and sharp curves predominate.
+      translated: If you are not accustomed to driving on country roads, be careful: steep slopes, narrow roads and tight curves are common.
+    ca-1910  chrF 49.7
+      source:     Els parisencs tenen fama de ser egocèntrics, maleducats i arrogants.
+      reference:  Parisians have a reputation for being egocentric, rude and arrogant.
+      translated: Parisians are notorious for being self-centered, rude, and arrogant.
+    ca-1686  chrF 54.3
+      source:     En conseqüència, el treball conjunt d'una organització per a superar una adversitat pot portar a un procés innovador per a respondre a la necessitat del client.
+      reference:  As a result, the process of an organization working together to overcome an obstacle can lead to a new innovative process to serve the customer's need.
+      translated: Consequently, an organization's joint work to overcome an adversity may lead to an innovative process to respond to the customer's need.
+    ca-1771  chrF 54.8
+      source:     Cal recordar que encara que s'hagi acabat la música als escenaris principals hi poden haver seccions del festival que segueixin tocant fins ben entrada la nit.
+      reference:  Remember that even though music on the main stages may have finished, there may be sections of the festival that will keep playing music until late into the night.
+      translated: Keep in mind that even though the music may be over on the main stage, there may be festival sections that continue playing well into the night.
+    ca-1891  chrF 56.6
+      source:     Lakkha Singh també va presentar el "bhajan" del "chhappan bhog". El va acompanyar el cantant Raju Khandelwal.
+      reference:  Lakkha Singh presented the chhappan bhog bhajan as well. Singer, Raju Khandelwal was accompanying him.
+      translated: Lakkha Singh also performed the "bhajan" of the "chhappan bhog". He was accompanied by singer Raju Khandelwal.
+    ca-1747  chrF 57.0
+      source:     Companys lluitadors també han retut homenatge a Luna.
+      reference:  Fellow wrestlers also paid tribute to Luna.
+      translated: Companions in arms have also paid tribute to Luna.

@@ -1,0 +1,314 @@
+name: asr-compare
+
+# Compares speech recognizers on Valencian, Catalan, Spanish and Catalan-Spanish code-switching, decoding the way the
+# kngfsh-translate app does (whisper.cpp v1.9.5, greedy, no timestamps, the app's audio window, the app's es/ca gate for
+# the code-switching clips). The question it answers (kngfsh-translate DIVERGENCES D104): does a recognizer fine-tuned
+# for Valencian or for code-switching beat the app's large-v3-turbo enough to be worth its size and time on the phone?
+#
+# Models, all whisper.cpp q8_0 (the app's turbo is q8_0):
+#   turbo-q8_0      the app's recognizer, ggml-large-v3-turbo-q8_0 (OpenAI)
+#   large-v3-q8_0   OpenAI large-v3, the base the three fine-tunes start from (so a gain can be told from the larger model)
+#   valencian-q8_0  BSC-LT/whisper-3cat-cv21-valencian (Corts Valencianes + Common Voice 21; Apache-2.0)
+#   caesar-q8_0     projecte-aina/whisper-large-v3-tiny-caesar (Catalan-Spanish code-switching; Apache-2.0)
+#   3catparla-q8_0  projecte-aina/whisper-large-v3-ca-3catparla (Catalan TV broadcasts; Apache-2.0)
+# The fine-tunes are Hugging Face models; whisper.cpp's convert-h5-to-ggml.py converts them and whisper-quantize makes
+# q8_0. Sets: eval/asr/prepare_sets.py. The audio of the CC-BY-NC sets stays in this run's artifacts (14 days); only
+# scores, references and model text are committed (eval/results/asr/), with attribution.
+#
+# Only actions owned by GitHub are used (the repository restricts which actions may run).
+
+on:
+  workflow_dispatch:
+  # workflow_dispatch only lists workflows on the default branch, so a push to the working branch also runs it.
+  push:
+    branches: ['claude/zen-sagan-96r3mm']
+    paths:
+      - 'eval/asr/**'
+      - '.github/workflows/asr-compare.yml'
+
+permissions:
+  contents: write
+  actions: read  # to reuse an earlier run's decodes (REUSE_RUN_ID)
+
+concurrency:
+  group: asr-compare-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  WHISPER_CPP_TAG: v1.9.5
+  OPENAI_WHISPER_TAG: v20250625
+  GATE_URL: https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-base-q5_1.bin
+  GATE_SHA256: 422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898
+  # An earlier run whose decodes are reused for the models it finished, when its clips are the same as this run's
+  # (run 43017541165 decoded four models; its report failed on a scoring bug). Empty for none.
+  REUSE_RUN_ID: '43017541165'
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Run 43033553190 sat in this step for over 15 minutes (it took 33 s the run before), most likely on a slow Ubuntu
+      # mirror: apt is bounded and retried, and if it still fails ffmpeg comes from PyPI (imageio-ffmpeg's static build).
+      - name: Tools
+        timeout-minutes: 20
+        run: |
+          apt_opts="-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30"
+          for attempt in 1 2; do
+            if timeout 240 sudo apt-get $apt_opts update -q && timeout 300 sudo apt-get $apt_opts install -y -q ffmpeg; then break; fi
+            echo "apt attempt $attempt failed"
+          done
+          if ! command -v ffmpeg >/dev/null; then
+            pip install imageio-ffmpeg==0.6.0
+            sudo ln -sf "$(python3 -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')" /usr/local/bin/ffmpeg
+          fi
+          ffmpeg -version | head -1
+          pip install huggingface_hub==0.36.0
+
+      - name: Build the harness and the quantizer (whisper.cpp ${{ env.WHISPER_CPP_TAG }})
+        run: |
+          git clone --depth 1 --branch "$WHISPER_CPP_TAG" https://github.com/ggml-org/whisper.cpp.git whisper.cpp
+          # Fixed x86 features rather than -march=native: the decode jobs run on other runners.
+          cmake -S eval/asr -B build -DWHISPER_DIR="$PWD/whisper.cpp" -DCMAKE_BUILD_TYPE=Release \
+            -DGGML_NATIVE=OFF -DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON
+          cmake --build build --target asr_host whisper-quantize -j "$(nproc)"
+          mkdir -p tools
+          cp build/asr_host tools/
+          cp "$(find build -name whisper-quantize -type f -perm -u+x | head -1)" tools/
+          cp whisper.cpp/models/convert-h5-to-ggml.py tools/
+
+      - name: Build the clip sets
+        run: python3 eval/asr/prepare_sets.py --out clips
+
+      - name: The app's language gate for the code-switching clips
+        run: |
+          curl -sSL --retry 3 -o gate.bin "$GATE_URL"
+          echo "$GATE_SHA256  gate.bin" | sha256sum -c -
+          tools/asr_host gate --model gate.bin --manifest clips/clips.tsv --root clips --out clips/gate.tsv --threads "$(nproc)"
+          python3 eval/asr/apply_gate.py --clips clips/clips.tsv --gate clips/gate.tsv
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: asr-clips
+          path: |
+            clips
+            tools
+          retention-days: 14
+
+  decode:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    # large-v3 decodes at about 3.5 x real time on the runner's 4 cores (turbo 0.88 x), about 160 min for the 45 min of
+    # clips; the job limit on a hosted runner is 360.
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: turbo-q8_0
+            kind: ggml
+            url: https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo-q8_0.bin
+            sha256: 317eb69c11673c9de1e1f0d459b253999804ec71ac4c23c17ecf5fbe24e259a1
+            about: "OpenAI large-v3-turbo, q8_0: the app's recognizer (ggerganov/whisper.cpp@5359861)"
+          - name: large-v3-q8_0
+            kind: ggml-f16
+            url: https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3.bin
+            sha256: 64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2
+            about: "OpenAI large-v3, quantized here to q8_0: the base of the three fine-tunes (ggerganov/whisper.cpp@5359861)"
+          - name: valencian-q8_0
+            kind: hf
+            repo: BSC-LT/whisper-3cat-cv21-valencian
+            revision: 2cc599fea1f9793082193039e11df7f3820e3ff2
+            about: "BSC-LT/whisper-3cat-cv21-valencian@2cc599f (large-v3 fine-tuned on Corts Valencianes and Common Voice 21, Apache-2.0), converted and quantized here to q8_0"
+          - name: caesar-q8_0
+            kind: hf
+            repo: projecte-aina/whisper-large-v3-tiny-caesar
+            revision: cf087e16e4403d80bf944d3761dd9ba5dc1ed0bc
+            about: "projecte-aina/whisper-large-v3-tiny-caesar@cf087e1 (large-v3 fine-tuned for Catalan-Spanish code-switching, Apache-2.0), converted and quantized here to q8_0"
+          - name: 3catparla-q8_0
+            kind: hf
+            repo: projecte-aina/whisper-large-v3-ca-3catparla
+            revision: 6e07d3a073b793fbbde227c11bc25d4bfb45e316
+            about: "projecte-aina/whisper-large-v3-ca-3catparla@6e07d3a (large-v3 fine-tuned on 710 h of Catalan TV, Apache-2.0), converted and quantized here to q8_0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: asr-clips
+
+      - uses: actions/download-artifact@v4
+        if: env.REUSE_RUN_ID != ''
+        continue-on-error: true
+        with:
+          name: hyps-${{ matrix.name }}
+          path: prev/hyps
+          run-id: ${{ env.REUSE_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/download-artifact@v4
+        if: env.REUSE_RUN_ID != ''
+        continue-on-error: true
+        with:
+          name: asr-clips
+          path: prev/run
+          run-id: ${{ env.REUSE_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      # A model whose text is already committed (or in the REUSE_RUN_ID run's artifacts) for exactly these clips, model
+      # and harness is not decoded again.
+      - name: Reuse committed results
+        id: reuse
+        env:
+          NAME: ${{ matrix.name }}
+          ABOUT: ${{ matrix.about }}
+        run: |
+          r=eval/results/asr
+          if ! [ -f "$r/$NAME.tsv" ] && [ -f "prev/hyps/$NAME.tsv" ] && [ -f prev/run/clips/clips.tsv ]; then
+            r=prev/hyps
+            cp prev/run/clips/clips.tsv "$r/clips.tsv"
+          fi
+          if [ -f "$r/$NAME.tsv" ] && [ -f "$r/$NAME.json" ] && cmp -s "$r/clips.tsv" clips/clips.tsv && python3 - "$r/$NAME.json" <<'PY'
+          import hashlib, json, os, sys
+          info = json.load(open(sys.argv[1]))
+          harness = hashlib.sha256(open("eval/asr/asr_host.cpp", "rb").read()).hexdigest()
+          sys.exit(0 if info.get("about") == os.environ["ABOUT"] and info.get("harness", harness) == harness else 1)
+          PY
+          then
+            mkdir -p hyps
+            cp "$r/$NAME.tsv" "$r/$NAME.json" hyps/
+            cp "$r/$NAME.log" hyps/ 2>/dev/null || true
+            echo "reuse=true" >> "$GITHUB_OUTPUT"
+            echo "Reusing the results of $NAME from $r."
+          fi
+
+      - uses: actions/cache@v4
+        if: steps.reuse.outputs.reuse != 'true'
+        id: model
+        with:
+          path: model.bin
+          key: asr-model-${{ matrix.name }}-${{ matrix.revision || matrix.sha256 }}-${{ env.WHISPER_CPP_TAG }}
+
+      - uses: actions/setup-python@v5
+        if: steps.reuse.outputs.reuse != 'true' && steps.model.outputs.cache-hit != 'true' && matrix.kind == 'hf'
+        with:
+          python-version: '3.12'
+
+      - name: Get the model
+        if: steps.reuse.outputs.reuse != 'true' && steps.model.outputs.cache-hit != 'true'
+        env:
+          KIND: ${{ matrix.kind }}
+          URL: ${{ matrix.url }}
+          SHA256: ${{ matrix.sha256 }}
+          REPO: ${{ matrix.repo }}
+          REVISION: ${{ matrix.revision }}
+        run: |
+          set -e
+          chmod +x tools/*
+          df -h . | tail -1
+          case "$KIND" in
+            ggml)
+              curl -sSL --retry 3 -o model.bin "$URL"
+              echo "$SHA256  model.bin" | sha256sum -c -
+              ;;
+            ggml-f16)
+              curl -sSL --retry 3 -o f16.bin "$URL"
+              echo "$SHA256  f16.bin" | sha256sum -c -
+              tools/whisper-quantize f16.bin model.bin q8_0
+              rm f16.bin
+              ;;
+            hf)
+              # 6 GB of weights, a 3 GB f16 conversion and the q8_0 model: make room first.
+              sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+              df -h . | tail -1
+              pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+              pip install -q "transformers>=4.46,<5" "huggingface_hub==0.36.0" numpy
+              python3 -c "from huggingface_hub import snapshot_download as d; print(d('$REPO', revision='$REVISION', local_dir='hf', allow_patterns=['*.json','*.txt','pytorch_model*.bin'], ignore_patterns=['model.safetensors.index.json']))"
+              mkdir -p openai/whisper/assets
+              curl -sSL --retry 3 -o openai/whisper/assets/mel_filters.npz \
+                "https://raw.githubusercontent.com/openai/whisper/$OPENAI_WHISPER_TAG/whisper/assets/mel_filters.npz"
+              mkdir -p converted
+              python3 tools/convert-h5-to-ggml.py hf openai converted
+              rm -rf hf ~/.cache/huggingface
+              tools/whisper-quantize converted/ggml-model.bin model.bin q8_0
+              rm -rf converted
+              ;;
+          esac
+          ls -l model.bin
+
+      - name: Decode
+        if: steps.reuse.outputs.reuse != 'true'
+        run: |
+          chmod +x tools/*
+          mkdir -p hyps
+          tools/asr_host decode --model model.bin --manifest clips/clips.tsv --root clips \
+            --out "hyps/${{ matrix.name }}.tsv" --threads "$(nproc)" 2>&1 | tee "hyps/${{ matrix.name }}.log"
+          python3 -c "import json,sys; json.dump({'about': sys.argv[1], 'bytes': int(sys.argv[2]), 'harness': sys.argv[3]}, open('hyps/${{ matrix.name }}.json','w'))" \
+            "${{ matrix.about }}" "$(stat -c %s model.bin)" "$(sha256sum eval/asr/asr_host.cpp | cut -d' ' -f1)"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hyps-${{ matrix.name }}
+          path: hyps
+          retention-days: 14
+
+  report:
+    needs: decode
+    # Score whatever models finished, but not when nothing was decoded (prepare failed) or the run was cancelled.
+    if: ${{ !cancelled() && needs.decode.result != 'skipped' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: |
+          pip install jiwer==4.0.0
+          pip install --no-deps num2words==0.5.14
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: asr-clips
+          path: run
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hyps-*
+          path: run/hyps
+          merge-multiple: true
+
+      - name: Score
+        run: |
+          mkdir -p eval/results/asr
+          python3 eval/asr/score_asr.py --clips run/clips/clips.tsv --hyps run/hyps --out eval/results/asr
+          cp run/clips/clips.tsv run/clips/gate.tsv eval/results/asr/
+          cp run/hyps/*.tsv run/hyps/*.json run/hyps/*.log eval/results/asr/ 2>/dev/null || true
+          tail -n 3 run/hyps/*.log || true
+
+      - name: Commit the results to this branch
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add eval/results/asr
+          if git diff --cached --quiet; then
+            echo "The results are unchanged."
+            exit 0
+          fi
+          git commit \
+            -m "Recognizer comparison: Valencian, Catalan, Spanish and code-switching (asr-compare.yml)" \
+            -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" \
+            -m "Claude-Session: https://claude.ai/code/session_01AuZCrEfQ5hUkwwCQLrSf9A"
+          git pull --rebase origin "${GITHUB_REF_NAME}" || true
+          git push origin "HEAD:${GITHUB_REF_NAME}"

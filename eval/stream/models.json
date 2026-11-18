@@ -1,0 +1,122 @@
+{
+  "about": "Engines of the draft-text bake-off (kngfsh-translate D127). Every file is checked against a pinned sha256 where one was known before the run; the rest are recorded by fetch_models.py in the run's results (models.lock.json).",
+  "engines": {
+    "moonshine-small-es": {
+      "kind": "moonshine",
+      "arch": 4,
+      "language": "es",
+      "fetch": {
+        "moonshine": {
+          "language": "es",
+          "arch": 4
+        }
+      },
+      "about": "Moonshine Streaming Small, Spanish (112.9M params, MIT), int8 .ort files as moonshine-voice ships them (download.moonshine.ai, quantized_26_08_24; the library checks size and CRC32C)"
+    },
+    "moonshine-small-es-seg": {
+      "kind": "moonshine",
+      "arch": 4,
+      "language": "es",
+      "fetch": {
+        "moonshine": {
+          "language": "es",
+          "arch": 4
+        }
+      },
+      "about": "Moonshine Streaming Small, Spanish (112.9M params, MIT), int8 .ort files as moonshine-voice ships them (download.moonshine.ai, quantized_26_08_24; the library checks size and CRC32C); the stream is ended and restarted where the app's segmenter closes a segment (8 s cap)",
+      "cut": "segments"
+    },
+    "moonshine-tiny-es": {
+      "kind": "moonshine",
+      "arch": 2,
+      "language": "es",
+      "fetch": {
+        "moonshine": {
+          "language": "es",
+          "arch": 2
+        }
+      },
+      "about": "Moonshine Streaming Tiny, Spanish (27.0M params, MIT), int8 .ort, quantized_26_08_24"
+    },
+    "moonshine-tiny-es-seg": {
+      "kind": "moonshine",
+      "arch": 2,
+      "language": "es",
+      "fetch": {
+        "moonshine": {
+          "language": "es",
+          "arch": 2
+        }
+      },
+      "about": "Moonshine Streaming Tiny, Spanish (27.0M params, MIT), int8 .ort, quantized_26_08_24; the stream is ended and restarted where the app's segmenter closes a segment (8 s cap)",
+      "cut": "segments"
+    },
+    "zipformer-kroko-es": {
+      "kind": "sherpa",
+      "language": "es",
+      "subdir": "sherpa-onnx-streaming-zipformer-es-kroko-2025-08-06",
+      "encoder": "encoder.onnx",
+      "decoder": "decoder.onnx",
+      "joiner": "joiner.onnx",
+      "fetch": {
+        "tar": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-es-kroko-2025-08-06.tar.bz2",
+        "sha256": "31b2230a95d23290b308b393da930015a4b2105cb3abb9367aed35f7fcf29cf1"
+      },
+      "about": "Kroko streaming Zipformer, Spanish (Banafo community model, CC-BY-SA), fp32, from sherpa-onnx's release"
+    },
+    "zipformer-surus-es": {
+      "kind": "sherpa",
+      "language": "es",
+      "encoder": "encoder.int8.onnx",
+      "decoder": "decoder.int8.onnx",
+      "joiner": "joiner.int8.onnx",
+      "fetch": {
+        "hf": "surus-ai/zipformer-30m-es-rioplatense-streaming",
+        "revision": "6a6d7bfe214ae13c634bd6c5d6aea75ca4650754",
+        "files": {
+          "encoder.int8.onnx": "e8210ffd60304d36ada64edad06bdf84034d9e50ef4db0a57957d936b37f1825",
+          "decoder.int8.onnx": "6d5bddd89178d8bc7fdb0445c2cc6de1d38280cba5f64beaff30f142d2c171cd",
+          "joiner.int8.onnx": "c75462936fdacc6432d1c8a1df7f3b38ebc477aafec4cfbe61b9458cc98e2a0e",
+          "tokens.txt": null
+        }
+      },
+      "about": "SURUS streaming Zipformer 30M, Rioplatense Spanish (Apache-2.0), int8"
+    },
+    "vosk-small-es": {
+      "kind": "vosk",
+      "language": "es",
+      "subdir": "vosk-model-small-es-0.42",
+      "fetch": {
+        "zip": "https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip",
+        "sha256": null
+      },
+      "about": "Vosk small Spanish 0.42 (Kaldi, Apache-2.0, 39 MB)"
+    },
+    "vosk-small-ca": {
+      "kind": "vosk",
+      "language": "ca",
+      "subdir": "vosk-model-small-ca-0.4",
+      "fetch": {
+        "zip": "https://alphacephei.com/vosk/models/vosk-model-small-ca-0.4.zip",
+        "sha256": null
+      },
+      "about": "Vosk small Catalan 0.4 (Kaldi, Apache-2.0, 42 MB)"
+    }
+  },
+  "whisper": {
+    "base-q5_1": {
+      "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-base-q5_1.bin",
+      "sha256": "422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898",
+      "cost": "measured",
+      "threads": 1,
+      "about": "whisper base q5_1, the app's language gate model, re-decoding on one runner core"
+    },
+    "turbo-q8_0": {
+      "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo-q8_0.bin",
+      "sha256": "317eb69c11673c9de1e1f0d459b253999804ec71ac4c23c17ecf5fbe24e259a1",
+      "cost": "npu",
+      "threads": 4,
+      "about": "large-v3-turbo q8_0 re-decoding, timed with Qualcomm's published NPU figures (encoder 312 ms per pass, 6.76 ms a token, Snapdragon 8 Elite For Galaxy), as a stand-in for the NPU float model"
+    }
+  }
+}

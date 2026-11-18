@@ -1,0 +1,23 @@
+{
+ "engine": "zipformer-surus-es",
+ "files": {
+  "decoder.int8.onnx": {
+   "bytes": 540688,
+   "sha256": "6d5bddd89178d8bc7fdb0445c2cc6de1d38280cba5f64beaff30f142d2c171cd"
+  },
+  "encoder.int8.onnx": {
+   "bytes": 36069310,
+   "sha256": "e8210ffd60304d36ada64edad06bdf84034d9e50ef4db0a57957d936b37f1825"
+  },
+  "joiner.int8.onnx": {
+   "bytes": 259417,
+   "sha256": "c75462936fdacc6432d1c8a1df7f3b38ebc477aafec4cfbe61b9458cc98e2a0e"
+  },
+  "tokens.txt": {
+   "bytes": 5212,
+   "sha256": "8a66d52395bf6758b7236d684b602ab1f78fdfe0e8f82b53fbff656881a12026"
+  }
+ },
+ "source": "surus-ai/zipformer-30m-es-rioplatense-streaming@6a6d7bfe214ae13c634bd6c5d6aea75ca4650754",
+ "bytes": 36874627
+}

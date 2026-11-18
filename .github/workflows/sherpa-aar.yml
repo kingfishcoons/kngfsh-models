@@ -1,0 +1,131 @@
+name: sherpa-aar
+
+# What the app would link for the Kroko (es) and Vosk (ca) drafters (kngfsh-translate D129): the sherpa-onnx Android
+# library at v2.0.1, the version D127 measured through pip. Reports each .aar asset of the release (URL, size, sha256),
+# the native libraries per ABI with their ELF alignment and dependencies, the onnxruntime version they bundle, and the
+# public Kotlin API of the streaming recognizer. Also prints the ONNX metadata of the Kroko model at its pinned
+# Hugging Face revision. Nothing is built or committed; results are in the job log and the job summary.
+#
+# Only actions owned by GitHub are used (the repository restricts which actions may run).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths:
+      - '.github/workflows/sherpa-aar.yml'
+
+permissions:
+  contents: read
+
+env:
+  SHERPA_TAG: v2.0.1
+  KROKO_REPO: csukuangfj/sherpa-onnx-streaming-zipformer-es-kroko-2025-08-06
+  KROKO_REV: 20cf7a4921613397841d31168796cade5b866585
+  # From the Hugging Face API (LFS oids) at KROKO_REV
+  KROKO_ENCODER_SHA256: 2d9f5ef87d1a5257f8a6687e21501c56f3aa2fcbfcfab9364dcc4ce4e06ae81b
+  KROKO_DECODER_SHA256: d4ce176b94b25f7acc88717bc3f704fcf5d6e131aaac2e0cabab3885541181ee
+  KROKO_JOINER_SHA256: dae35df88d676e320fcdb99217328e66dcf722bf11b0f2459e14ddb5b982ded5
+
+jobs:
+  aar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -fsSL --retry 5 -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/k2-fsa/sherpa-onnx/releases/tags/$SHERPA_TAG" > release.json
+          echo "== Assets whose name mentions aar or android"
+          jq -r '.assets[] | select(.name | test("aar|android"; "i")) | "\(.name)\t\(.size)\t\(.browser_download_url)\t\(.digest // "")"' release.json
+          jq -r '.assets[] | select(.name | endswith(".aar")) | .browser_download_url' release.json > aar-urls.txt
+          test -s aar-urls.txt || { echo "no .aar asset in $SHERPA_TAG"; exit 1; }
+
+      - name: Inspect each .aar
+        run: |
+          {
+            echo "## sherpa-onnx $SHERPA_TAG Android library"
+          } >> "$GITHUB_STEP_SUMMARY"
+          JAVAP="$JAVA_HOME_17_X64/bin/javap"
+          while read -r url; do
+            name=$(basename "$url")
+            dir="aar-${name%.aar}"
+            curl -fsSL --retry 5 -o "$name" "$url"
+            mkdir -p "$dir" && unzip -q "$name" -d "$dir"
+            size=$(stat -c %s "$name"); sha=$(sha256sum "$name" | cut -d' ' -f1)
+            echo "================ $name"
+            echo "URL: $url"
+            echo "size: $size bytes"
+            echo "sha256: $sha"
+            printf -- '- `%s`: %s bytes, sha256 `%s`\n' "$url" "$size" "$sha" >> "$GITHUB_STEP_SUMMARY"
+            echo "== Top-level contents"; (cd "$dir" && find . -maxdepth 2 | sort)
+            echo "== AndroidManifest.xml"; cat "$dir/AndroidManifest.xml" 2>/dev/null || true
+            echo "== Native libraries per ABI (size, max LOAD alignment, NEEDED)"
+            for so in $(find "$dir/jni" -name '*.so' | sort); do
+              align=$(readelf -lW "$so" | awk '$1=="LOAD"{print $NF}' | sort -u | tr '\n' ' ')
+              needed=$(readelf -dW "$so" | awk '/NEEDED/{gsub(/[\[\]]/,"",$NF); print $NF}' | tr '\n' ' ')
+              echo "${so#$dir/}  $(stat -c %s "$so") bytes  align: $align needed: $needed"
+            done
+            echo "== onnxruntime version strings"
+            for so in $(find "$dir/jni" -name '*onnxruntime*.so' -o -name 'libsherpa-onnx-jni.so' | sort); do
+              echo "-- ${so#$dir/}"
+              strings -n 5 "$so" | grep -E '(^|[^0-9.])1\.(1[5-9]|2[0-9])\.[0-9]+($|[^0-9.])' | sort -u | head -30 || true
+            done
+            echo "== Java classes"
+            mkdir -p "$dir/classes" && unzip -q -o "$dir/classes.jar" -d "$dir/classes"
+            (cd "$dir/classes" && find . -name '*.class' | sed 's|^\./||; s|\.class$||; s|/|.|g' | sort) > "$dir/classes.txt"
+            cat "$dir/classes.txt"
+            echo "== javap -public: streaming recognizer API and what it takes"
+            grep -E '\.(OnlineRecognizer|OnlineStream|OnlineRecognizerConfig|OnlineRecognizerResult|OnlineModelConfig|OnlineTransducerModelConfig|OnlineParaformerModelConfig|OnlineZipformer2CtcModelConfig|OnlineNeMoCtcModelConfig|OnlineToneCtcModelConfig|OnlineLMConfig|OnlineCtcFstDecoderConfig|FeatureConfig|EndpointConfig|EndpointRule|HomophoneReplacerConfig|QnnConfig)(Kt)?$' "$dir/classes.txt" > "$dir/api.txt" || true
+            # Anything else in the package whose name starts with Online, in case the list above missed one
+            grep -E '\.Online[A-Za-z]*$' "$dir/classes.txt" >> "$dir/api.txt" || true
+            sort -u "$dir/api.txt" | while read -r cls; do
+              "$JAVAP" -public -cp "$dir/classes.jar" "$cls"
+            done
+          done < aar-urls.txt
+
+  kroko:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch the pinned Kroko files
+        run: |
+          base="https://huggingface.co/$KROKO_REPO/resolve/$KROKO_REV"
+          for f in encoder decoder joiner; do
+            curl -fsSL --retry 5 -o "$f.onnx" "$base/$f.onnx"
+          done
+          curl -fsSL --retry 5 -o tokens.txt "$base/tokens.txt"
+          printf '%s  encoder.onnx\n%s  decoder.onnx\n%s  joiner.onnx\n' \
+            "$KROKO_ENCODER_SHA256" "$KROKO_DECODER_SHA256" "$KROKO_JOINER_SHA256" | sha256sum -c -
+          ls -l *.onnx tokens.txt
+          echo "tokens.txt sha256 $(sha256sum tokens.txt | cut -d' ' -f1), $(wc -l < tokens.txt) lines"
+      - name: ONNX metadata
+        run: |
+          pip install onnx==1.18.0
+          python3 - <<'EOF'
+          import onnx
+          for f in ("encoder.onnx", "decoder.onnx", "joiner.onnx"):
+              m = onnx.load(f, load_external_data=False)
+              print(f"================ {f}")
+              print("ir_version", m.ir_version, "opsets", [(o.domain or "ai.onnx", o.version) for o in m.opset_import])
+              print("producer", m.producer_name, m.producer_version)
+              print("== metadata_props")
+              for p in m.metadata_props:
+                  print(f"{p.key} = {p.value}")
+              def shape(v):
+                  t = v.type.tensor_type
+                  return [d.dim_param or d.dim_value for d in t.shape.dim], onnx.TensorProto.DataType.Name(t.elem_type)
+              init = {i.name for i in m.graph.initializer}
+              print("== inputs")
+              for v in m.graph.input:
+                  if v.name not in init:
+                      print(" ", v.name, *shape(v))
+              print("== outputs")
+              for v in m.graph.output:
+                  print(" ", v.name, *shape(v))
+          EOF

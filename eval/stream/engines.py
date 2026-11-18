@@ -1,4 +1,4 @@
-"""Streaming recognizers behind one small interface, for the draft-text bake-off (kngfsh-translate D125, D126).
+"""Streaming recognizers behind one small interface, for the draft-text bake-off (kngfsh-translate D125, D127).
 
 Each engine takes 16 kHz mono float32 audio in chunks and, after every chunk, returns the text it would show now:
 everything it has finished plus what it is still working on, as one string. `finish()` flushes the end of the stream.
@@ -15,6 +15,9 @@ class Engine:
     def feed(self, chunk):
         raise NotImplementedError
 
+    def cut(self):
+        """Called where the app's segmenter closes a segment, for engines run with `cut: segments`."""
+
     def finish(self):
         raise NotImplementedError
 
@@ -30,16 +33,29 @@ class Moonshine(Engine):
         from moonshine_voice.transcriber import Transcriber
 
         self.transcriber = Transcriber(model_path=str(model_dir), model_arch=ModelArch(arch), update_interval=update_interval)
-        self.stream = self.transcriber.create_stream(update_interval=update_interval)
-        self.stream.start()
+        self.update_interval = update_interval
         self.lines = {}
+        self.generation = 0
+        self._open_stream()
+
+    def _open_stream(self):
+        self.stream = self.transcriber.create_stream(update_interval=self.update_interval)
         self.stream.add_listener(self._on_event)
+        self.stream.start()
 
     def _on_event(self, event):
         line = getattr(event, "line", None)
         if line is not None:
-            start = self.lines.get(line.line_id, (line.start_time, ""))[0]
-            self.lines[line.line_id] = (start, line.text or "")
+            key = (self.generation, line.line_id)
+            start = self.lines.get(key, ((self.generation, line.start_time), ""))[0]
+            self.lines[key] = (start, line.text or "")
+
+    def cut(self):
+        """Ends the stream where the app's segmenter closes a segment and starts a fresh one, so no line runs on past
+        the 8 s cap (the variant `cut: segments` in models.json)."""
+        self.stream.stop()
+        self.generation += 1
+        self._open_stream()
 
     def _text(self):
         return " ".join(t for _, t in sorted(self.lines.values()) if t.strip())

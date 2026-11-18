@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Downloads one bake-off engine's files into DIR and checks or records their sha256 (models.json, D126).
+"""Downloads one bake-off engine's files into DIR and checks or records their sha256 (models.json, D127).
 
     python3 eval/stream/fetch_models.py --models eval/stream/models.json --engine NAME --dir DIR --lock lock.json
 """

@@ -2,7 +2,7 @@
 
 Which offline streaming recognizer could put the Castellano or Valencian words on the kngfsh-translate screen within a
 second or so of being said, while the app's large-v3 still writes the final line? kngfsh-translate's DIVERGENCES D125
-surveys the options; D126 records what this measures. The workflow is `.github/workflows/stream-draft.yml`.
+surveys the options; D127 records what this measures. The workflow is `.github/workflows/stream-draft.yml`.
 
 | File | What it does |
 |---|---|

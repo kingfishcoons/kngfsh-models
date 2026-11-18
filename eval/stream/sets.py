@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds the audio streams of the draft-text bake-off (kngfsh-translate D126) and what is known about each.
+"""Builds the audio streams of the draft-text bake-off (kngfsh-translate D127) and what is known about each.
 
 Three sets, all from this repository's FLEURS reference pack (CC-BY-4.0):
 

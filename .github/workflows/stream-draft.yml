@@ -1,6 +1,6 @@
 name: stream-draft
 
-# The draft-text bake-off (kngfsh-translate DIVERGENCES D125, D126): which offline streaming recognizer could show the
+# The draft-text bake-off (kngfsh-translate DIVERGENCES D125, D127): which offline streaming recognizer could show the
 # Castellano or Valencian words within a second or so of being said, while the app's large-v3 still writes the final
 # line. Every engine hears the same three streams (the 60 reference clips one by one, the mixed track, the continuous
 # track; eval/stream/sets.py) in 100 ms chunks, and eval/stream/score_stream.py turns what each showed, and when, into
@@ -83,7 +83,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        engine: [moonshine-small-es, moonshine-tiny-es, zipformer-kroko-es, zipformer-surus-es, vosk-small-es, vosk-small-ca]
+        engine: [moonshine-small-es, moonshine-small-es-seg, moonshine-tiny-es, moonshine-tiny-es-seg, zipformer-kroko-es, zipformer-surus-es, vosk-small-es, vosk-small-ca]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -112,8 +112,11 @@ jobs:
           path: out
           retention-days: 7
 
+  # The re-decoding passes take about 1.5 h for turbo; their output is committed (eval/results/stream/whisper-*.tsv), so a
+  # push re-scores those and only a manual run decodes again.
   redecode:
     needs: prepare
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     strategy:
@@ -175,7 +178,10 @@ jobs:
           cp parts/*.jsonl results/ 2>/dev/null || true
           for m in base-q5_1 turbo-q8_0; do
             files=(parts/whisper-$m-*.tsv)
-            [ -e "${files[0]}" ] || continue
+            if [ ! -e "${files[0]}" ]; then
+              [ -e "eval/results/stream/whisper-$m.tsv" ] && cp "eval/results/stream/whisper-$m.tsv" results/ && echo "reusing the committed $m passes"
+              continue
+            fi
             (head -1 "${files[0]}"; for f in "${files[@]}"; do tail -n +2 "$f"; done) > "results/whisper-$m.tsv"
           done
           ls -la results
@@ -198,7 +204,7 @@ jobs:
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add eval/results/stream
           if git diff --cached --quiet; then echo "The results are unchanged."; exit 0; fi
-          git commit -m "stream-draft: results of run ${GITHUB_RUN_ID} (kngfsh-translate D126) [skip ci]"
+          git commit -m "stream-draft: results of run ${GITHUB_RUN_ID} (kngfsh-translate D127) [skip ci]"
           for attempt in 1 2 3; do
             git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break
             sleep 10

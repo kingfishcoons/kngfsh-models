@@ -12,7 +12,7 @@
 // decode: for each clip whose language is es or ca: id, language, ms, token_p, text (tabs and newlines in the text
 // become spaces). A clip with language "auto" is skipped; the workflow resolves it with the gate first.
 //
-// redecode (the draft-text bake-off, kngfsh-translate D126): segments.tsv is a header, then item, seg, file, start_ms,
+// redecode (the draft-text bake-off, kngfsh-translate D127): segments.tsv is a header, then item, seg, file, start_ms,
 // end_ms, language. Each segment is decoded as it grows: the audio from start_ms to start_ms + S, + 2S, ... and finally
 // to end_ms, each pass the app's way with the window scaled to the audio so far. Output: item, seg, start_ms, point_ms,
 // ms, n_tokens, text.

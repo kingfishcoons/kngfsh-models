@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scores the draft-text bake-off (kngfsh-translate D126): how soon each drafter shows words, how often it changes
+"""Scores the draft-text bake-off (kngfsh-translate D127): how soon each drafter shows words, how often it changes
 what it showed, how right the words are, and what it costs.
 
     python3 eval/stream/score_stream.py --items sets/items.json --results DIR --models eval/stream/models.json \
@@ -104,17 +104,28 @@ def streaming_timeline(rec, duration_ms):
     done = max(duration_ms, done) + rec["finish_wall_ms"]
     events.append((done, rec["final"]))
     cpu_s = (sum(rec["cpu_ms"]) + rec["finish_cpu_ms"]) / 1000
-    return events, cpu_s, max_queue
+    per = 30_000 // rec["chunk_ms"]  # 30 s windows
+    cpu = rec["cpu_ms"]
+    peak = max((sum(cpu[i:i + per]) / 30_000 for i in range(0, max(1, len(cpu) - per + 1), per // 3)), default=0.0)
+    return events, cpu_s, max_queue, peak
+
+
+def looped(n_tokens, seconds):
+    """A pass that wrote far more tokens than the audio can hold (a repetition loop): more than 8 + 6 a second. Normal
+    speech in the reference sets runs at about 3 to 5 tokens a second."""
+    return n_tokens > 8 + 6 * seconds
 
 
 def whisper_timeline(passes, segments, mode, cost):
-    """passes: {seg index: [(point_ms, ms, n_tokens, text)]}; returns the display events and the busy seconds."""
-    events, free, finals, busy, max_queue = [], 0.0, [], 0.0, 0.0
+    """passes: {seg index: [(point_ms, ms, n_tokens, text)]}; returns the display events, the busy seconds, the
+    largest queue and the number of passes dropped as loops. A looped pass costs its time but changes nothing shown
+    (a drafter would need the same guard the app has); a segment whose last pass looped keeps its last good text."""
+    events, free, finals, busy, max_queue, dropped = [], 0.0, [], 0.0, 0.0, 0
     for s, seg in enumerate(segments):
         plist = sorted(passes.get(s, []))
         if not plist:
             continue
-        j, history = 0, []
+        j, history, shown = 0, [], ""
         while j < len(plist):
             t = max(free, plist[j][0])
             k = max(x for x in range(j, len(plist)) if plist[x][0] <= t)
@@ -123,17 +134,22 @@ def whisper_timeline(passes, segments, mode, cost):
             free = t + c
             busy += c
             max_queue = max(max_queue, free - point)
-            history.append(text)
             last = k == len(plist) - 1
-            if mode == "raw" or last:
-                shown = text
+            if looped(n_tok, (point - seg["start_ms"]) / 1000):
+                dropped += 1
+                if last:
+                    shown = history[-1] if history else ""
             else:
-                a, b = (history[-2].split() if len(history) > 1 else []), text.split()
-                shown = " ".join(b[:lcp(a, b)])
+                history.append(text)
+                if mode == "raw" or last:
+                    shown = text
+                else:
+                    a, b = (history[-2].split() if len(history) > 1 else []), text.split()
+                    shown = " ".join(b[:lcp(a, b)])
             events.append((free, " ".join(finals + ([shown] if shown else []))))
             j = k + 1
-        finals.append(plist[-1][3])
-    return events, busy / 1000, max_queue
+        finals.append(shown)
+    return events, busy / 1000, max_queue, dropped
 
 
 def score_item(item, events, lang_of_text):
@@ -213,13 +229,14 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
 
     engines = {}  # name -> list of (item, events, cpu_s, max_queue)
+    loops = {}  # whisper drafter -> set -> passes dropped as loops
     for path in sorted(Path(args.results).glob("*.jsonl")):
         name = path.stem
         recs = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
         for rec in recs:
             item = by_id[(rec["set"], rec["id"])]
-            events, cpu_s, q = streaming_timeline(rec, item["duration_ms"])
-            engines.setdefault(name, []).append((item, events, cpu_s, q))
+            events, cpu_s, q, peak = streaming_timeline(rec, item["duration_ms"])
+            engines.setdefault(name, []).append((item, events, cpu_s, q, peak if item["duration_ms"] >= 30_000 else None))
     for path in sorted(Path(args.results).glob("whisper-*.tsv")):
         model = path.stem[len("whisper-"):]
         cost = models["whisper"][model]["cost"]
@@ -234,10 +251,12 @@ def main():
                 key = f"{item['set']}/{item['id']}"
                 if key not in passes:
                     continue
-                events, busy_s, q = whisper_timeline(passes[key], item["segments"], mode, cost)
+                events, busy_s, q, dropped = whisper_timeline(passes[key], item["segments"], mode, cost)
                 if not events:
                     events = [(item["duration_ms"], "")]
-                engines.setdefault(name, []).append((item, events, busy_s if cost == "measured" else None, q))
+                loops.setdefault(name, {}).setdefault(item["set"], 0)
+                loops[name][item["set"]] += dropped
+                engines.setdefault(name, []).append((item, events, busy_s if cost == "measured" else None, q, None))
 
     summary, finals = [], []
     for name, runs in sorted(engines.items()):
@@ -248,7 +267,8 @@ def main():
             agg = {"es": {"S": 0, "D": 0, "I": 0, "N": 0}, "ca": {"S": 0, "D": 0, "I": 0, "N": 0}}
             vs_large = {"es": [0, 0], "ca": [0, 0]}
             appear, settle, firsts, rev, fw, cpu, audio, queue = [], [], [], 0, 0, 0.0, 0.0, 0.0
-            for item, events, cpu_s, q in sel:
+            peaks = [r[4] for r in sel if r[4] is not None]
+            for item, events, cpu_s, q, _ in sel:
                 lang = item["utterances"][0]["language"] if len(item["utterances"]) == 1 else "es"
                 s = score_item(item, events, lang)
                 for u, p in zip(item["utterances"], s["per"]):
@@ -284,6 +304,8 @@ def main():
                 "revisions_per_100": round(100 * rev / fw, 1) if fw else None,
                 "cpu_s_per_audio_s": round(cpu / audio, 3) if any(r[2] is not None for r in sel) else None,
                 "max_queue_s": round(queue / 1000, 1),
+                "peak_30s_cpu_s_per_s": round(max(peaks), 3) if peaks else None,
+                "loop_passes_dropped": loops.get(name, {}).get(set_name),
                 "words_matched": len(appear),
             }
             summary.append(row)
@@ -296,7 +318,7 @@ def main():
         w = csv.DictWriter(f, fieldnames=["engine", "id", "language", "draft"], delimiter="\t")
         w.writeheader()
         w.writerows(finals)
-    lines = ["# Draft-text bake-off (kngfsh-translate D126)", "",
+    lines = ["# Draft-text bake-off (kngfsh-translate D127)", "",
              "GitHub runner (x86), one core per streaming engine; see eval/stream/README.md for how each figure is made.",
              "Lags are in seconds after a word was said (estimated); WER in %; CPU in seconds per second of audio.", ""]
     for set_name in ("clips", "mixed", "continuous"):
@@ -304,13 +326,15 @@ def main():
         if not rows:
             continue
         lines += [f"## {set_name}", "",
-                  "| engine | WER es | WER ca | vs large-v3 es | vs large-v3 ca | appear p50 / p90 | settle p50 / p90 | first words p50 | revisions /100 | CPU s/s | max queue s |",
-                  "|---|---|---|---|---|---|---|---|---|---|---|"]
+                  "| engine | WER es | WER ca | vs large-v3 es | vs large-v3 ca | appear p50 / p90 | settle p50 / p90 | first words p50 | revisions /100 | CPU s/s (peak 30 s) | max queue s | loops dropped |",
+                  "|---|---|---|---|---|---|---|---|---|---|---|---|"]
         f = lambda v: "" if v is None else str(v)
         for r in rows:
             lines.append(f"| {r['engine']} | {f(r['wer_es'])} | {f(r['wer_ca'])} | {f(r['vs_large_es'])} | {f(r['vs_large_ca'])} | "
                          f"{f(r['appear_p50_s'])} / {f(r['appear_p90_s'])} | {f(r['settle_p50_s'])} / {f(r['settle_p90_s'])} | "
-                         f"{f(r['first_words_p50_s'])} | {f(r['revisions_per_100'])} | {f(r['cpu_s_per_audio_s'])} | {f(r['max_queue_s'])} |")
+                         f"{f(r['first_words_p50_s'])} | {f(r['revisions_per_100'])} | {f(r['cpu_s_per_audio_s'])}"
+                         f"{' (' + str(r['peak_30s_cpu_s_per_s']) + ')' if r['peak_30s_cpu_s_per_s'] is not None else ''} | "
+                         f"{f(r['max_queue_s'])} | {f(r['loop_passes_dropped'])} |")
         lines.append("")
     (out / "report.md").write_text("\n".join(lines), encoding="utf-8")
     print("\n".join(lines))

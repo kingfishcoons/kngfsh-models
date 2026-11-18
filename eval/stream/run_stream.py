@@ -52,9 +52,14 @@ def main():
             engine = engines.make(spec)
             load_ms = (time.perf_counter() - t0) * 1000
             wall, cpu, changes, last = [], [], [], None
+            cuts = sorted(s["end_ms"] for s in item["segments"]) if spec.get("cut") == "segments" else []
             for k in range(0, len(audio), CHUNK):
                 w0, c0 = time.perf_counter(), time.process_time()
                 text = engine.feed(audio[k:k + CHUNK])
+                while cuts and (k + CHUNK) * 1000 // 16000 >= cuts[0]:
+                    cuts.pop(0)
+                    engine.cut()
+                    text = engine._text() if hasattr(engine, "_text") else text
                 wall.append(round((time.perf_counter() - w0) * 1000, 2))
                 cpu.append(round((time.process_time() - c0) * 1000, 2))
                 if text != last:

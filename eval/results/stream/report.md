@@ -1,0 +1,49 @@
+# Draft-text bake-off (kngfsh-translate D126)
+
+GitHub runner (x86), one core per streaming engine; see eval/stream/README.md for how each figure is made.
+Lags are in seconds after a word was said (estimated); WER in %; CPU in seconds per second of audio.
+
+## clips
+
+| engine | WER es | WER ca | vs large-v3 es | vs large-v3 ca | appear p50 / p90 | settle p50 / p90 | first words p50 | revisions /100 | CPU s/s | max queue s |
+|---|---|---|---|---|---|---|---|---|---|---|
+| moonshine-small-es | 7.6 | 84.0 | 6.6 | 84.9 | 0.17 / 1.01 | 0.88 / 3.5 | 0.63 | 143.5 | 0.268 | 0.7 |
+| moonshine-tiny-es | 8.5 | 88.4 | 7.9 | 89.1 | 0.38 / 1.1 | 0.75 / 3.35 | 1.01 | 110.0 | 0.086 | 0.2 |
+| vosk-small-ca | 80.7 | 15.1 | 81.0 | 19.6 | 0.32 / 0.95 | 0.69 / 6.22 | 0.72 | 77.4 | 0.06 | 0.1 |
+| vosk-small-es | 13.4 | 86.0 | 12.2 | 87.2 | 0.12 / 0.75 | 0.53 / 5.34 | 0.56 | 75.1 | 0.084 | 0.1 |
+| whisper-base-q5_1-cpu1-la2 | 13.3 | 44.3 | 11.8 | 45.5 | 2.79 / 5.01 | 3.32 / 6.24 | 2.9 | 23.4 | 0.794 | 3.0 |
+| whisper-base-q5_1-cpu1-raw | 13.3 | 44.3 | 11.8 | 45.5 | 1.04 / 1.88 | 2.16 / 5.13 | 1.86 | 147.6 | 0.794 | 3.0 |
+| whisper-turbo-q8_0-npu-la2 | 34.4 | 107.2 | 34.4 | 110.3 | 1.93 / 3.83 | 2.02 / 4.5 | 3.29 | 5.0 |  | 2.9 |
+| whisper-turbo-q8_0-npu-raw | 34.4 | 107.2 | 34.4 | 110.3 | 0.35 / 1.46 | 0.87 / 3.0 | 1.35 | 157.1 |  | 2.9 |
+| zipformer-kroko-es | 3.6 | 82.3 | 2.7 | 83.6 | 0.77 / 1.52 | 0.88 / 1.61 | 1.47 | 8.9 | 0.035 | 0.1 |
+| zipformer-surus-es | 14.5 | 87.0 | 12.6 | 88.0 | 0.09 / 0.62 | 0.26 / 0.74 | 0.52 | 47.0 | 0.048 | 0.0 |
+
+## mixed
+
+| engine | WER es | WER ca | vs large-v3 es | vs large-v3 ca | appear p50 / p90 | settle p50 / p90 | first words p50 | revisions /100 | CPU s/s | max queue s |
+|---|---|---|---|---|---|---|---|---|---|---|
+| moonshine-small-es | 4.9 | 81.6 |  |  | 0.92 / 22.9 | 2.36 / 27.0 |  | 157.8 | 0.844 | 38.9 |
+| moonshine-tiny-es | 7.3 | 85.3 |  |  | 0.79 / 8.54 | 1.53 / 12.2 |  | 125.6 | 0.705 | 20.4 |
+| vosk-small-ca | 82.1 | 16.9 |  |  | 0.34 / 0.94 | 0.78 / 6.02 |  | 80.7 | 0.031 | 0.1 |
+| vosk-small-es | 10.3 | 83.7 |  |  | 0.08 / 0.67 | 0.58 / 5.89 |  | 80.7 | 0.061 | 0.1 |
+| whisper-base-q5_1-cpu1-la2 | 13.3 | 42.9 |  |  | 2.71 / 4.76 | 3.38 / 6.58 |  | 29.0 | 0.638 | 2.8 |
+| whisper-base-q5_1-cpu1-raw | 13.3 | 42.9 |  |  | 0.85 / 1.8 | 2.25 / 5.36 |  | 153.3 | 0.638 | 2.8 |
+| whisper-turbo-q8_0-npu-la2 | 88.6 | 185.0 |  |  | 2.02 / 4.08 | 2.16 / 5.18 |  | 5.2 |  | 2.6 |
+| whisper-turbo-q8_0-npu-raw | 88.6 | 185.0 |  |  | -11.68 / 1.81 | 0.92 / 3.5 |  | 130.8 |  | 2.6 |
+| zipformer-kroko-es | 1.9 | 81.0 |  |  | 0.77 / 1.45 | 0.88 / 1.6 |  | 8.3 | 0.033 | 0.1 |
+| zipformer-surus-es | 23.6 | 86.8 |  |  | 0.11 / 0.69 | 0.24 / 0.78 |  | 47.4 | 0.046 | 0.0 |
+
+## continuous
+
+| engine | WER es | WER ca | vs large-v3 es | vs large-v3 ca | appear p50 / p90 | settle p50 / p90 | first words p50 | revisions /100 | CPU s/s | max queue s |
+|---|---|---|---|---|---|---|---|---|---|---|
+| moonshine-small-es | 2.7 | 83.1 |  |  | 0.59 / 25.97 | 1.21 / 28.6 |  | 178.6 | 0.941 | 40.4 |
+| moonshine-tiny-es | 4.9 | 88.3 |  |  | 0.73 / 9.59 | 1.05 / 11.96 |  | 125.0 | 0.737 | 18.8 |
+| vosk-small-ca | 83.7 | 18.7 |  |  | 0.29 / 0.98 | 0.76 / 11.72 |  | 79.7 | 0.04 | 0.0 |
+| vosk-small-es | 14.6 | 86.5 |  |  | 0.09 / 0.79 | 1.0 / 13.17 |  | 91.2 | 0.076 | 0.1 |
+| whisper-base-q5_1-cpu1-la2 | 14.9 | 44.2 |  |  | 2.85 / 5.32 | 3.43 / 6.84 |  | 29.1 | 0.939 | 3.4 |
+| whisper-base-q5_1-cpu1-raw | 14.9 | 44.2 |  |  | 0.58 / 1.81 | 2.66 / 6.28 |  | 227.1 | 0.939 | 3.4 |
+| whisper-turbo-q8_0-npu-la2 | 43.6 | 156.7 |  |  | 2.23 / 5.68 | 2.88 / 6.75 |  | 10.0 |  | 3.6 |
+| whisper-turbo-q8_0-npu-raw | 43.6 | 156.7 |  |  | -1.51 / 1.46 | 1.66 / 5.8 |  | 184.3 |  | 3.6 |
+| zipformer-kroko-es | 2.2 | 78.5 |  |  | 0.75 / 1.54 | 0.84 / 1.59 |  | 7.1 | 0.034 | 0.1 |
+| zipformer-surus-es | 20.1 | 90.2 |  |  | -0.02 / 0.62 | 0.16 / 0.74 |  | 55.8 | 0.045 | 0.0 |

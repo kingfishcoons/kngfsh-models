@@ -1,0 +1,100 @@
+{
+ "engine": "vosk-small-ca",
+ "files": {
+  "vosk-model-small-ca-0.4/README": {
+   "bytes": 26,
+   "sha256": "a41a957647e416f72579aedcc38900b2b5bd98615a6e9a012d91a4dccf8d83ad"
+  },
+  "vosk-model-small-ca-0.4/am/final.mdl": {
+   "bytes": 13291461,
+   "sha256": "22e3603d44369a2a33ad6467037110a50d75c506433094be933b02e82c1ee3d2"
+  },
+  "vosk-model-small-ca-0.4/am/tree": {
+   "bytes": 243868,
+   "sha256": "092f2ba43a61f53511da4814d133cbf3c1641820d1dbbdc2ffcbcdca33dfd408"
+  },
+  "vosk-model-small-ca-0.4/conf/mfcc.conf": {
+   "bytes": 82,
+   "sha256": "42b1450e80757f2702bd640ff6c0aa4b3809610754f883bac6fd26eea2699107"
+  },
+  "vosk-model-small-ca-0.4/graph/Gr.fst": {
+   "bytes": 27834775,
+   "sha256": "3c10aaacbfd57d486e3dc777c94cd587c634de937c98779d3834e92e05effe0a"
+  },
+  "vosk-model-small-ca-0.4/graph/HCLr.fst": {
+   "bytes": 26632506,
+   "sha256": "2b2ae3e95c174d0aa179259816f860e49574efb6a167e122d4c3da7204ce276c"
+  },
+  "vosk-model-small-ca-0.4/graph/disambig_tid.int": {
+   "bytes": 65,
+   "sha256": "5de7c41b092009f25d8c2f9efffe926b29cc631290370102b95d592f1b80845f"
+  },
+  "vosk-model-small-ca-0.4/graph/phones/align_lexicon.int": {
+   "bytes": 7679734,
+   "sha256": "ed2a4427b75a74cf506f911d2225ce91b19df2cee3282530b504c74c5bef7587"
+  },
+  "vosk-model-small-ca-0.4/graph/phones/align_lexicon.txt": {
+   "bytes": 10482225,
+   "sha256": "f06f741a90b2b7e32de4a1480efeb0d670949b80169532d0861e954cab82ecbb"
+  },
+  "vosk-model-small-ca-0.4/graph/phones/disambig.int": {
+   "bytes": 52,
+   "sha256": "19f90905089c9e4e44c514cc424f1cb6e9709cde5434b2144a158c45704e68f3"
+  },
+  "vosk-model-small-ca-0.4/graph/phones/disambig.txt": {
+   "bytes": 42,
+   "sha256": "fedd3dd8a146ecf02bf85d3d8ffde0d432043566ff92b50fe489e6918b90fa7a"
+  },
+  "vosk-model-small-ca-0.4/graph/phones/optional_silence.csl": {
+   "bytes": 2,
+   "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+  },
+  "vosk-model-small-ca-0.4/graph/phones/optional_silence.int": {
+   "bytes": 2,
+   "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+  },
+  "vosk-model-small-ca-0.4/graph/phones/optional_silence.txt": {
+   "bytes": 4,
+   "sha256": "ebe5d1c9a1dc955e8b0e9d16062b2d6fede3ba741afdb9a6aec65810009bee11"
+  },
+  "vosk-model-small-ca-0.4/graph/phones/silence.csl": {
+   "bytes": 21,
+   "sha256": "8d99bf63ef15987b60950cfd42d9484d3a4b16e679cd355ac98b439bb8f16147"
+  },
+  "vosk-model-small-ca-0.4/graph/phones/word_boundary.int": {
+   "bytes": 1716,
+   "sha256": "117a8ca1c6b9342eac068ef9ffeb0a21b02d4a8231635382b1a3b7668bb3475e"
+  },
+  "vosk-model-small-ca-0.4/graph/phones/word_boundary.txt": {
+   "bytes": 1900,
+   "sha256": "559fa8f94787ca77f1a4088e8490a32c167aa17d5dad80a114d729bd4880f2a0"
+  },
+  "vosk-model-small-ca-0.4/ivector/final.dubm": {
+   "bytes": 168048,
+   "sha256": "d9627c175114d1856f4f75be400fd53daf22dd2c9e436a0c1b8eea457cb8e95b"
+  },
+  "vosk-model-small-ca-0.4/ivector/final.ie": {
+   "bytes": 8288887,
+   "sha256": "d435ed4fedba322d9ecc2e1d3e379d540ca136cd5103633df1727d8bbbecafeb"
+  },
+  "vosk-model-small-ca-0.4/ivector/final.mat": {
+   "bytes": 22575,
+   "sha256": "8d36c350fede6dc57171191accd89d47712385c4041c1bb213115910a898f90c"
+  },
+  "vosk-model-small-ca-0.4/ivector/global_cmvn.stats": {
+   "bytes": 555,
+   "sha256": "2c5658adc5e04ce73d5f375ce2c7b43bd4d1f895717299e76836036ce600c5c9"
+  },
+  "vosk-model-small-ca-0.4/ivector/online_cmvn.conf": {
+   "bytes": 95,
+   "sha256": "a2f3571754b64297cb7efb2e7ca3df61995c5a45fcbb97188f90613552bb2dfe"
+  },
+  "vosk-model-small-ca-0.4/ivector/splice.conf": {
+   "bytes": 35,
+   "sha256": "9f0c5f7c82d18eaf25d8bce470efa9f7741f88411fe428774bc0a9bb69a24756"
+  }
+ },
+ "archive_sha256": "99f90bfff5c2b187c705ddbc20aaa2600eddc359466f404404f1db6029fba5d4",
+ "source": "https://alphacephei.com/vosk/models/vosk-model-small-ca-0.4.zip",
+ "bytes": 94648676
+}

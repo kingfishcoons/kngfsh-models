@@ -1,0 +1,32 @@
+{
+ "engine": "zipformer-kroko-es",
+ "files": {
+  "sherpa-onnx-streaming-zipformer-es-kroko-2025-08-06/README.md": {
+   "bytes": 55,
+   "sha256": "f42a5c6d54eb811dd0dd624cbee0e86205fc7bcb05507097f3278cf1b0b5c6af"
+  },
+  "sherpa-onnx-streaming-zipformer-es-kroko-2025-08-06/decoder.onnx": {
+   "bytes": 617488,
+   "sha256": "d4ce176b94b25f7acc88717bc3f704fcf5d6e131aaac2e0cabab3885541181ee"
+  },
+  "sherpa-onnx-streaming-zipformer-es-kroko-2025-08-06/encoder.onnx": {
+   "bytes": 154878102,
+   "sha256": "2d9f5ef87d1a5257f8a6687e21501c56f3aa2fcbfcfab9364dcc4ce4e06ae81b"
+  },
+  "sherpa-onnx-streaming-zipformer-es-kroko-2025-08-06/joiner.onnx": {
+   "bytes": 336817,
+   "sha256": "dae35df88d676e320fcdb99217328e66dcf722bf11b0f2459e14ddb5b982ded5"
+  },
+  "sherpa-onnx-streaming-zipformer-es-kroko-2025-08-06/test_wavs/0.wav": {
+   "bytes": 235052,
+   "sha256": "49fd2cfa4b62db7068143c582b35de9d31ec2733495ece3611105131d21de06c"
+  },
+  "sherpa-onnx-streaming-zipformer-es-kroko-2025-08-06/tokens.txt": {
+   "bytes": 6385,
+   "sha256": "1be5e0a58e05d06d327df4c6b7b5e4f8aba01da6981eb016fcaceafc6a56680f"
+  }
+ },
+ "archive_sha256": "31b2230a95d23290b308b393da930015a4b2105cb3abb9367aed35f7fcf29cf1",
+ "source": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-es-kroko-2025-08-06.tar.bz2",
+ "bytes": 156073899
+}

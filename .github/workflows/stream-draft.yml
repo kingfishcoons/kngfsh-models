@@ -1,0 +1,205 @@
+name: stream-draft
+
+# The draft-text bake-off (kngfsh-translate DIVERGENCES D125, D126): which offline streaming recognizer could show the
+# Castellano or Valencian words within a second or so of being said, while the app's large-v3 still writes the final
+# line. Every engine hears the same three streams (the 60 reference clips one by one, the mixed track, the continuous
+# track; eval/stream/sets.py) in 100 ms chunks, and eval/stream/score_stream.py turns what each showed, and when, into
+# lag, revisions, word error and CPU. Engines and pinned files: eval/stream/models.json.
+#
+#   streaming: Moonshine Streaming Small and Tiny (es), Zipformer Kroko (es) and SURUS (es), Vosk small es and ca;
+#              one runner core each (taskset), as a drafter would get one core on the phone.
+#   re-decoding: whisper base q5_1 on one core, and large-v3-turbo q8_0 timed with Qualcomm's NPU figures, each
+#              decoding the app's 8 s segments again as they grow (asr_host redecode, once a second).
+#
+# Only actions owned by GitHub are used (the repository restricts which actions may run).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/project-thread-q8fdgt']
+    paths:
+      - 'eval/stream/**'
+      - '.github/workflows/stream-draft.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stream-draft-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  WHISPER_CPP_TAG: v1.9.5
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Sets
+        run: |
+          pip install onnxruntime==1.22.1 numpy==2.2.6
+          pip download --no-deps silero-vad==6.2.0 -d vadwheel
+          python3 -c "import zipfile,glob; zipfile.ZipFile(glob.glob('vadwheel/*.whl')[0]).extract('silero_vad/data/silero_vad.onnx','vad')"
+          echo "1a153a22f4509e292a94e67d6f9b85e8deb25b4988682b7e174c65279d8788e3  vad/silero_vad/data/silero_vad.onnx" | sha256sum -c -
+          python3 eval/stream/sets.py --vad vad/silero_vad/data/silero_vad.onnx --out sets
+      - name: Build asr_host (whisper.cpp ${{ env.WHISPER_CPP_TAG }})
+        run: |
+          git clone --depth 1 --branch "$WHISPER_CPP_TAG" https://github.com/ggml-org/whisper.cpp.git whisper.cpp
+          cmake -S eval/asr -B build -DWHISPER_DIR="$PWD/whisper.cpp" -DCMAKE_BUILD_TYPE=Release \
+            -DGGML_NATIVE=OFF -DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON
+          cmake --build build --target asr_host -j "$(nproc)"
+          mkdir -p tools && cp build/asr_host tools/
+      - name: Segments for the re-decoding drafters
+        run: |
+          python3 - <<'EOF'
+          import json
+          items = json.load(open("sets/items.json"))
+          with open("sets/segments.tsv", "w") as f:
+              f.write("item\tseg\tfile\tstart_ms\tend_ms\tlanguage\n")
+              for it in items:
+                  for k, s in enumerate(it["segments"]):
+                      # the language of the utterance that overlaps the segment most, as a locked chip would give it
+                      best = max(it["utterances"], key=lambda u: min(u["off_ms"], s["end_ms"]) - max(u["on_ms"], s["start_ms"]))
+                      f.write(f"{it['set']}/{it['id']}\t{k}\t{it['wav']}\t{s['start_ms']}\t{s['end_ms']}\t{best['language']}\n")
+          EOF
+          wc -l sets/segments.tsv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stream-sets
+          path: |
+            sets
+            tools
+          retention-days: 7
+
+  stream:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [moonshine-small-es, moonshine-tiny-es, zipformer-kroko-es, zipformer-surus-es, vosk-small-es, vosk-small-ca]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: stream-sets
+      - name: Engines
+        run: pip install numpy==2.2.6 moonshine-voice==0.1.6 sherpa-onnx==2.0.1 vosk==0.3.45
+      - name: Fetch ${{ matrix.engine }}
+        run: python3 eval/stream/fetch_models.py --models eval/stream/models.json --engine "${{ matrix.engine }}" --dir model --lock "lock-${{ matrix.engine }}.json"
+      - name: Stream (one core)
+        env:
+          MOONSHINE_ORT_SINGLE_THREAD: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          nproc; lscpu | grep -i "model name" || true
+          taskset -c 0 python3 eval/stream/run_stream.py --engine "${{ matrix.engine }}" --models eval/stream/models.json \
+            --model-dir model --items sets/items.json --out "out/${{ matrix.engine }}.jsonl"
+          cp "lock-${{ matrix.engine }}.json" out/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stream-${{ matrix.engine }}
+          path: out
+          retention-days: 7
+
+  redecode:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {model: base-q5_1, set: all, threads: 1, cpus: '0'}
+          - {model: turbo-q8_0, set: clips, threads: 4, cpus: '0-3'}
+          - {model: turbo-q8_0, set: mixed, threads: 4, cpus: '0-3'}
+          - {model: turbo-q8_0, set: continuous, threads: 4, cpus: '0-3'}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: stream-sets
+      - name: Model
+        run: |
+          read -r url sha < <(python3 -c "import json; m=json.load(open('eval/stream/models.json'))['whisper']['${{ matrix.model }}']; print(m['url'], m['sha256'])")
+          curl -sSL --retry 4 -o model.bin "$url"
+          echo "$sha  model.bin" | sha256sum -c -
+      - name: Re-decode
+        run: |
+          chmod +x tools/asr_host
+          if [ "${{ matrix.set }}" = all ]; then cp sets/segments.tsv segs.tsv; else
+            (head -1 sets/segments.tsv; grep -P "^${{ matrix.set }}/" sets/segments.tsv) > segs.tsv; fi
+          wc -l segs.tsv
+          mkdir -p out
+          taskset -c ${{ matrix.cpus }} tools/asr_host redecode --model model.bin --manifest segs.tsv --root "" \
+            --out "out/whisper-${{ matrix.model }}-${{ matrix.set }}.tsv" --threads ${{ matrix.threads }} --step-ms 1000
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: redecode-${{ matrix.model }}-${{ matrix.set }}
+          path: out
+          retention-days: 7
+
+  report:
+    needs: [stream, redecode]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: stream-sets
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*'
+          path: parts
+          merge-multiple: true
+      - name: Score
+        run: |
+          pip install jiwer==4.0.0 num2words==0.5.14
+          mkdir -p results
+          cp parts/*.jsonl results/ 2>/dev/null || true
+          for m in base-q5_1 turbo-q8_0; do
+            files=(parts/whisper-$m-*.tsv)
+            [ -e "${files[0]}" ] || continue
+            (head -1 "${files[0]}"; for f in "${files[@]}"; do tail -n +2 "$f"; done) > "results/whisper-$m.tsv"
+          done
+          ls -la results
+          python3 eval/stream/score_stream.py --items sets/items.json --results results --models eval/stream/models.json \
+            --large-v3 eval/results/asr/large-v3-q8_0.tsv --out eval/results/stream
+          mkdir -p eval/results/stream/locks
+          cp parts/lock-*.json eval/results/stream/locks/ 2>/dev/null || true
+          cp results/whisper-*.tsv eval/results/stream/ 2>/dev/null || true
+          cat eval/results/stream/report.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stream-report
+          path: |
+            eval/results/stream
+            results
+          retention-days: 14
+      - name: Commit the results to this branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add eval/results/stream
+          if git diff --cached --quiet; then echo "The results are unchanged."; exit 0; fi
+          git commit -m "stream-draft: results of run ${GITHUB_RUN_ID} (kngfsh-translate D126) [skip ci]"
+          for attempt in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break
+            sleep 10
+          done

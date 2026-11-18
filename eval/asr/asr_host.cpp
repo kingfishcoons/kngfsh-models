@@ -5,11 +5,17 @@
 //
 //   asr_host gate   --model ggml-base-q5_1.bin --manifest clips.tsv --root DIR --out languages.tsv [--threads N]
 //   asr_host decode --model MODEL.bin --manifest clips.tsv --root DIR --out hypotheses.tsv [--threads N] [--no-flash]
+//   asr_host redecode --model MODEL.bin --manifest segments.tsv --root DIR --out passes.tsv [--threads N] [--step-ms S]
 //
 // clips.tsv: a header line, then id, set, language (es, ca or auto), file (relative to --root), duration_ms, ...
 // gate: for each clip, the app's language gate (es/ca restricted detection on the same window): id, p_es, p_ca, ms.
 // decode: for each clip whose language is es or ca: id, language, ms, token_p, text (tabs and newlines in the text
 // become spaces). A clip with language "auto" is skipped; the workflow resolves it with the gate first.
+//
+// redecode (the draft-text bake-off, kngfsh-translate D126): segments.tsv is a header, then item, seg, file, start_ms,
+// end_ms, language. Each segment is decoded as it grows: the audio from start_ms to start_ms + S, + 2S, ... and finally
+// to end_ms, each pass the app's way with the window scaled to the audio so far. Output: item, seg, start_ms, point_ms,
+// ms, n_tokens, text.
 //
 // Audio must be 16 kHz mono PCM16 WAV (prepare_sets.py writes it so).
 
@@ -38,6 +44,7 @@ double ms_since(Clock::time_point start) {
 struct Args {
     std::string mode, model, manifest, root, out;
     int threads = 4;
+    int step_ms = 1000;
     bool flash = true;
 };
 
@@ -53,10 +60,11 @@ bool parse(int argc, char **argv, Args &a) {
         else if (k == "--root" && next(v)) a.root = v;
         else if (k == "--out" && next(v)) a.out = v;
         else if (k == "--threads" && next(v)) a.threads = std::max(1, std::stoi(v));
+        else if (k == "--step-ms" && next(v)) a.step_ms = std::max(100, std::stoi(v));
         else if (k == "--no-flash") a.flash = false;
         else return false;
     }
-    return (a.mode == "gate" || a.mode == "decode") && !a.model.empty() && !a.manifest.empty() && !a.out.empty();
+    return (a.mode == "gate" || a.mode == "decode" || a.mode == "redecode") && !a.model.empty() && !a.manifest.empty() && !a.out.empty();
 }
 
 struct Clip {
@@ -158,12 +166,72 @@ void quiet_log(ggml_log_level level, const char *text, void *) {
     if (level == GGML_LOG_LEVEL_ERROR && std::strstr(text, "encoder_begin_callback returned false") == nullptr) std::fputs(text, stderr);
 }
 
+struct Decoded {
+    std::string text;
+    int n_tokens = 0;
+};
+
+Decoded decode_text(whisper_context *ctx, const whisper_full_params &p, const float *pcm, int n) {
+    Decoded d;
+    if (whisper_full(ctx, p, pcm, n) != 0) return d;
+    const whisper_token eot = whisper_token_eot(ctx);
+    for (int i = 0; i < whisper_full_n_segments(ctx); i++) {
+        const std::string seg = whisper_full_get_segment_text(ctx, i);
+        if (seg.find_first_not_of(" \t\r\n") == std::string::npos) continue;
+        d.text += seg;
+        for (int k = 0; k < whisper_full_n_tokens(ctx, i); k++)
+            if (whisper_full_get_token_id(ctx, i, k) < eot) d.n_tokens++;
+    }
+    return d;
+}
+
+int redecode(whisper_context *ctx, const Args &a) {
+    std::ifstream in(a.manifest);
+    std::ofstream out(a.out);
+    out << "item\tseg\tstart_ms\tpoint_ms\tms\tn_tokens\ttext\n";
+    std::string line;
+    std::getline(in, line);  // header
+    std::map<std::string, std::vector<float>> audio;
+    int passes = 0;
+    double work_ms = 0;
+    while (std::getline(in, line)) {
+        auto c = split_tabs(line);
+        if (c.size() < 6) continue;
+        const std::string &item = c[0], &seg = c[1], &file = c[2], &language = c[5];
+        const long start = std::stol(c[3]), end = std::stol(c[4]);
+        if (!audio.count(file)) audio[file] = read_wav(a.root + "/" + file);
+        const auto &pcm = audio[file];
+        if (pcm.empty()) {
+            std::fprintf(stderr, "%s: unreadable audio %s\n", item.c_str(), file.c_str());
+            return 1;
+        }
+        std::vector<long> points;
+        for (long t = start + a.step_ms; t < end; t += a.step_ms) points.push_back(t);
+        points.push_back(end);
+        for (long point : points) {
+            const size_t from = static_cast<size_t>(start) * 16, to = std::min(pcm.size(), static_cast<size_t>(point) * 16);
+            if (to <= from) continue;
+            whisper_full_params p = base_params(a.threads, audio_ctx_for(ctx, point - start), language.c_str());
+            const auto t0 = Clock::now();
+            const Decoded d = decode_text(ctx, p, pcm.data() + from, static_cast<int>(to - from));
+            const double ms = ms_since(t0);
+            work_ms += ms;
+            passes++;
+            out << item << '\t' << seg << '\t' << start << '\t' << point << '\t' << static_cast<long>(ms) << '\t' << d.n_tokens
+                << '\t' << one_line(d.text) << '\n';
+            out.flush();
+        }
+    }
+    std::fprintf(stderr, "redecode: %d passes in %.0f s, %d threads, step %d ms\n", passes, work_ms / 1000, a.threads, a.step_ms);
+    return 0;
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {
     Args a;
     if (!parse(argc, argv, a)) {
-        std::fprintf(stderr, "usage: asr_host gate|decode --model M --manifest clips.tsv --root DIR --out OUT [--threads N] [--no-flash]\n");
+        std::fprintf(stderr, "usage: asr_host gate|decode|redecode --model M --manifest clips.tsv --root DIR --out OUT [--threads N] [--no-flash]\n");
         return 2;
     }
     whisper_log_set(quiet_log, nullptr);
@@ -178,6 +246,11 @@ int main(int argc, char **argv) {
     }
     std::fprintf(stderr, "loaded %s in %.0f ms; %s\n", a.model.c_str(), ms_since(load_start), whisper_print_system_info());
 
+    if (a.mode == "redecode") {
+        const int rc = redecode(ctx, a);
+        whisper_free(ctx);
+        return rc;
+    }
     const auto clips = read_manifest(a.manifest);
     std::ofstream out(a.out);
     if (a.mode == "gate") out << "id\tp_es\tp_ca\tms\n";

@@ -10,6 +10,7 @@ Clips for comparing speech recognizers on Castellano and Valencian, used by the 
 | `manifest.json` | Each clip's id, file, language, duration, raw and normalized transcript, `english_reference`, `english_source`, and licence; the build's source revision and English config |
 | `transcripts-es.tsv`, `transcripts-ca.tsv` | File, duration, raw transcript and `english` (the English reference), one line per clip; `null` where a clip has no English |
 | `tracks/kngfsh-ref-continuous.wav` | The continuous-speech phone-test track (4 min 30 s), built from 30 of these clips by `build_tracks.py` (below) |
+| `tracks/kngfsh-ref-mixed.csv` | Where each of the mixed phone-test track's 30 clips sits in it (kngfsh-translate D81); `eval/stream/sets.py` rebuilds the track from the clips with it |
 | `tracks/kngfsh-ref-continuous.csv`, `tracks/kngfsh-ref-continuous-segments.csv` | Where each clip sits in the track; the segments the app's detector and segmenter cut it into |
 | `script/es-castellano.txt`, `script/ca-valencia.txt` | A school-themed script of about 2 to 3 minutes, to be read aloud and recorded on the phones |
 
